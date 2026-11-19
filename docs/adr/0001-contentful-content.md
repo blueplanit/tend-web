@@ -24,13 +24,13 @@ The `legalDocument` content type holds the privacy policy and the terms of use. 
 
 Migration files in `contentful/migrations/` define each content type. The model is then reviewed in git, and blog types follow the same path.
 
-### 3. An invalid publish keeps the last good copy
+### 3. An invalid publish expires nothing
 
-The webhook checks a published landing JSON against the schema. If the JSON fails, the webhook answers 422 and expires nothing. The site keeps the last good copy.
+The webhook checks a published entry against its schema: the landing JSON or a legal document. If the entry fails, the webhook answers 422 and expires nothing. The site keeps its cached copy until the next rebuild. See Consequences.
 
 The webhook also checks the version that the Delivery API serves. A later invalid publish can overtake a valid one while the webhook waits. The webhook then answers 409 and expires nothing.
 
-There is no preview. The webhook activity log in Contentful is the only place an editor sees a rejection.
+There is no preview. The webhook activity log in Contentful is the only place a Founder sees a rejection.
 
 ### 4. Only a publish changes the site
 
@@ -60,8 +60,8 @@ Legal text is no longer in git. Contentful's version history records each change
 
 ## Consequences
 
-- An editor sees a bad landing JSON only in the webhook activity log. Nothing alerts the editor.
-- A rejected entry stays the published version. The site keeps its cached copy only until the next rebuild: a deploy, the backstop, or another expiry. That rebuild reads the invalid entry and shows the default copy. We accept this limit. The README rule tells editors to fix or unpublish a rejected entry at once. To remove the limit, store the last approved copy outside Contentful, for example in Vercel Blob.
+- A Founder sees a rejected entry only in the webhook activity log. Nothing alerts the Founder.
+- A rejected entry stays the published version. The site keeps its cached copy only until the next rebuild: a deploy, the backstop, or another expiry. That rebuild reads the invalid entry. The landing page shows the default copy, and a legal page fails the build. We accept this limit. The README rule tells a Founder to fix or unpublish a rejected entry at once. To remove the limit, store the last approved copy outside Contentful, for example in Vercel Blob.
 - A change to the landing JSON shape needs a code change first. Deploy the code, then publish the new shape. In the other order, the webhook rejects the publish.
 - Each deploy reads each entry again. That costs 3 Delivery API calls per deploy.
 - A broken webhook is invisible for up to 7 days.

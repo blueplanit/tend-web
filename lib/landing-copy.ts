@@ -10,9 +10,9 @@ import {
 import { DEFAULT_LANDING_COPY } from "./content";
 
 // The landing page copy lives in the Contentful pageCopy entry "landing", as JSON.
-// This schema is the contract for that JSON. The webhook rejects a publish that
-// fails it, so the live site keeps the last good copy.
-// See docs/adr/0001-contentful-content.md.
+// This schema is the contract for that JSON. The webhook expires nothing for a
+// publish that fails it. The site keeps its cached copy until the next rebuild.
+// See docs/adr/0001-contentful-content.md, Consequences.
 
 const text = z.string().trim().min(1);
 

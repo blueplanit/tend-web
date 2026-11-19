@@ -6,11 +6,10 @@ How the engineering skills should consume this repo's domain documentation when 
 
 **This repo:** single-context. The Tend glossary lives in the tend-marketing repo, at `../tend-marketing/GLOSSARY.md`, not at this repo root. Read that file. Do not create a second `GLOSSARY.md` in tend-web: add new terms to the tend-marketing glossary. ADRs live in `docs/adr/` here.
 
-- **`GLOSSARY.md`** at the repo root, or
-- **`GLOSSARY-MAP.md`** at the repo root if it exists: it points at one `GLOSSARY.md` per context. Read each one relevant to the topic.
-- **`docs/adr/`**: read ADRs that touch the area you're about to work in. In multi-context repos, also check `src/<context>/docs/adr/` for context-scoped decisions.
+- **`../tend-marketing/GLOSSARY.md`**: the Tend glossary.
+- **`docs/adr/`**: read ADRs that touch the area you work in.
 
-If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
+If an ADR does not exist yet, proceed silently. The `/domain-modeling` skill creates ADRs here when a decision is resolved. It adds new terms to the tend-marketing glossary, not to a glossary in this repo.
 
 ## File structure
 

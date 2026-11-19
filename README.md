@@ -67,9 +67,12 @@ Paste the link into `BETA_LINKS` in `lib/site.ts`. The button then links to the 
 
 ## Edit copy
 
-Edit the entry in Contentful and publish it. The webhook expires that page's cache at once. The next visit rebuilds the page with the new copy. There is no preview. Check the JSON before you publish.
+Edit the entry in Contentful and publish it. The webhook expires the cache of each page that shows the entry. The next visit rebuilds the page with the new copy. There is no preview. Check the entry before you publish.
 
-- **Landing page:** the `landing` entry of the Page copy type. Keep the keys and the shape. The JSON must pass the schema in `lib/landing-copy.ts`.
+- **Landing page:** the `landing` entry of the Page copy type. Keep the keys and the shape. The JSON must pass the schema in `lib/landing-copy.ts`. The landing copy also feeds the page titles, the header and the footer on every page.
+- **Privacy policy and terms of use:** the Legal document entries. Change "Last updated" for a real policy change only, not for a typo fix.
+
+A new page section or a new field needs a code change and a deploy.
 
 ### After you publish
 
@@ -80,25 +83,24 @@ Contentful always accepts the publish. The webhook decides if the site uses it.
 3. Open the newest call. Its response body names the error.
 4. Fix the entry and publish again. If you cannot fix it now, unpublish your change. Do it at once.
 
-| Status | Meaning |
-|---|---|
-| 200 | The site uses the new copy. |
-| 422 | The published JSON is invalid. The site keeps its cached copy. |
-| 409 | A later, invalid publish replaced a valid one. The site keeps its cached copy. |
-| 401 | The secret in Vercel and the webhook differ. |
-| 503 | Contentful was slow. Contentful retries the call. |
+| Status | Response body | Meaning |
+|---|---|---|
+| 200 | `"revalidated": true` | The site uses the new copy. |
+| 200 | `"revalidated": false` | The change does not affect the site, for example an entry no page reads. |
+| 422 | `"error": …` | The published entry is invalid: landing JSON or a legal document. The site keeps its cached copy. |
+| 409 | `"error": …` | A later, invalid publish replaced a valid one. The site keeps its cached copy. |
+| 400 | `"error": …` | The call is not a Contentful entry. Check the webhook settings. |
+| 401 | `"error": …` | The secret in Vercel and the webhook differ. |
+| 503 | `"error": …` | Contentful was slow. Contentful retries the call. |
 
-**Why step 4 is urgent:** an invalid entry stays the published version. The site keeps its cached copy only until the next rebuild. A deploy or the 7-day backstop then reads the invalid entry, and the site shows the default copy from `lib/content.ts`. Nothing alerts you to a 422.
-- **Privacy policy and terms of use:** the Legal document entries. Change "Last updated" for a real policy change only, not for a typo fix.
-
-A new page section or a new field needs a code change and a deploy.
+**Why step 4 is urgent:** an invalid entry stays the published version. The site keeps its cached copy only until the next rebuild. A deploy or the 7-day backstop then reads the invalid entry. The landing page then shows the default copy from `lib/content.ts`. A legal page then fails the build, and Vercel keeps the last deploy. Nothing alerts a Founder to a 422 or 409.
 
 ## Change the content model
 
-Add a numbered file to `contentful/migrations/`, then run it once:
+Add a file to `contentful/migrations/`. Give it the next free number, for example `005-add-field.cjs`. Then run it once:
 
 ```bash
-npm run contentful:migrate -- contentful/migrations/003-example.cjs
+npm run contentful:migrate -- contentful/migrations/005-add-field.cjs
 ```
 
-Contentful does not record which migrations ran. Do not run a file twice.
+Contentful does not record which migrations ran. Run each file once only.
