@@ -21,3 +21,17 @@ These rules apply to all user-facing copy: page text, alt text, metadata and ima
 - Brand copy says "we". No promised outcomes. No financial advice. No shame or fear.
 - Each product fact comes from the prototype. Check it against the current app before you push.
 - The live copy lives in Contentful (space TendApp). These rules apply there too. `lib/content.ts` holds the default landing copy only. See `docs/adr/0001-contentful-content.md`.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub issues on blueplanit/tend-web. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default labels: needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: ADRs in `docs/adr/`. The Tend glossary lives in the tend-marketing repo. See `docs/agents/domain.md`.
