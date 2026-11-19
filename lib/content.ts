@@ -1,11 +1,10 @@
-// All copy for the landing page lives here.
+// The default landing page copy.
 //
-// Contentful groundwork: each top-level key maps to one future content type.
-// When the copy moves to Contentful, a loader returns this same shape, and this
-// file becomes the fallback copy. See asv2-web docs/adr/0003 for the caching
-// pattern (cached reads, tags, and a revalidation webhook).
+// The live copy is the Contentful pageCopy entry "landing" (lib/landing-copy.ts).
+// The site shows this file only when Contentful fails, or when its JSON is invalid.
+// This file is not kept in sync with Contentful. See docs/adr/0001-contentful-content.md.
 //
-// Rules for this copy (tend-marketing GOAL.md and the Pippy brand kit):
+// Rules for the copy, in Contentful and here (tend-marketing GOAL.md and the Pippy brand kit):
 // - Brand copy says "we".
 // - No promised outcomes. No financial advice. No shame or fear.
 // - Pippy is never sad, sick or gone.
@@ -13,15 +12,14 @@
 //   extra payment. Write them in lowercase. Only names keep a capital: Tend, Pippy.
 // - A metaphor always comes with the financial concept behind it. For example,
 //   "a weed regrows" comes with what interest is and how it adds up.
-// See AGENTS.md "Copy rules".
 // - Each product fact comes from the prototype. Check it against the current app
-//   before you push a change that adds one.
+//   before you publish a change that adds one.
+// See AGENTS.md "Copy rules".
 
+import type { LandingCopy } from "./landing-copy";
 import { FEEDBACK_EMAIL } from "./site";
 
-export type Faq = { question: string; answer: string };
-
-export const content = {
+export const DEFAULT_LANDING_COPY: LandingCopy = {
   meta: {
     title: "Tend: a calmer way to pay down debt",
     description:
@@ -96,25 +94,25 @@ export const content = {
     heading: "Inside the app",
     screens: [
       {
-        src: "/app-screens/garden.png",
+        key: "garden",
         title: "Your garden",
         body: "Your weeds, their balances and your progress, on one screen.",
         alt: "The Tend home screen. Pippy is content. Three weeds show a credit card, a student loan and a car loan.",
       },
       {
-        src: "/app-screens/widget.png",
+        key: "widget",
         title: "Home screen widget",
         body: "Pippy's mood and your progress, right on your phone's home screen.",
         alt: "A phone home screen with a Tend notification and two Tend widgets that show Pippy and progress.",
       },
       {
-        src: "/app-screens/calendar.png",
+        key: "calendar",
         title: "Pippy's month",
         body: "Pippy's mood for each day, with on-time payments and extra payments.",
         alt: "A month calendar with Pippy's mood on each day, and totals for the month.",
       },
       {
-        src: "/app-screens/check-in.png",
+        key: "check-in",
         title: "Check-in",
         body: "One question, with answers that never judge.",
         alt: "A check-in that asks whether a Visa payment got paid. One answer is “It's a tight month”.",
@@ -163,10 +161,10 @@ export const content = {
         question: "How do I send feedback?",
         answer: `Email us at ${FEEDBACK_EMAIL}. We read every message.`,
       },
-    ] satisfies Faq[],
+    ],
   },
 
   footer: {
     disclaimer: "Tend does not give financial advice.",
   },
-} as const;
+};

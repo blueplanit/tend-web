@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { content } from "@/lib/content";
+import type { LandingCopy } from "@/lib/landing-copy";
 import { COMPANY_NAME, FEEDBACK_EMAIL } from "@/lib/site";
 import { BetaButtons } from "./beta-buttons";
 
@@ -8,7 +8,7 @@ const container = "mx-auto w-full max-w-6xl px-4 sm:px-6";
 const sectionHeading =
   "font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl";
 
-export function SiteHeader() {
+export function SiteHeader({ nav }: { nav: LandingCopy["nav"] }) {
   return (
     <header className="sticky top-0 z-20 border-b border-ink/5 bg-mist/90 backdrop-blur">
       <div className={`${container} flex items-center justify-between gap-4 py-3`}>
@@ -20,7 +20,7 @@ export function SiteHeader() {
           Tend
         </Link>
         <nav aria-label="Main" className="hidden items-center gap-7 font-bold text-muted md:flex">
-          {content.nav.map((item) => (
+          {nav.map((item) => (
             <Link key={item.href} href={item.href} className="hover:text-ink">
               {item.label}
             </Link>
@@ -37,8 +37,7 @@ export function SiteHeader() {
   );
 }
 
-export function Hero() {
-  const { hero } = content;
+export function Hero({ hero, comingSoonNotice }: { hero: LandingCopy["hero"]; comingSoonNotice: string }) {
   return (
     <section
       id="top"
@@ -53,7 +52,7 @@ export function Hero() {
         </h1>
         <p className="mt-5 max-w-xl text-lg text-muted sm:text-xl">{hero.subhead}</p>
         <div className="mt-8">
-          <BetaButtons location="hero" />
+          <BetaButtons location="hero" comingSoonNotice={comingSoonNotice} />
         </div>
       </div>
 
@@ -87,8 +86,7 @@ export function Hero() {
   );
 }
 
-export function HowItWorks() {
-  const { howItWorks } = content;
+export function HowItWorks({ howItWorks }: { howItWorks: LandingCopy["howItWorks"] }) {
   return (
     <section id="how-it-works" className="scroll-mt-20 bg-white py-16 md:py-24">
       <div className={container}>
@@ -109,8 +107,7 @@ export function HowItWorks() {
   );
 }
 
-export function MeetPippy() {
-  const { meetPippy } = content;
+export function MeetPippy({ meetPippy }: { meetPippy: LandingCopy["meetPippy"] }) {
   return (
     <section id="meet-pippy" className="scroll-mt-20 py-16 md:py-24">
       <div className={container}>
@@ -142,17 +139,16 @@ export function MeetPippy() {
   );
 }
 
-export function InsideTheApp() {
-  const { insideTheApp } = content;
+export function InsideTheApp({ insideTheApp }: { insideTheApp: LandingCopy["insideTheApp"] }) {
   return (
     <section id="inside-the-app" className="scroll-mt-20 bg-sky/60 py-16 md:py-24">
       <div className={container}>
         <h2 className={sectionHeading}>{insideTheApp.heading}</h2>
         <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4 lg:gap-x-6">
           {insideTheApp.screens.map((screen) => (
-            <li key={screen.src}>
+            <li key={screen.key}>
               <Image
-                src={screen.src}
+                src={`/app-screens/${screen.key}.png`}
                 alt={screen.alt}
                 width={1278}
                 height={2640}
@@ -170,8 +166,7 @@ export function InsideTheApp() {
   );
 }
 
-export function WhoFor() {
-  const { whoFor } = content;
+export function WhoFor({ whoFor }: { whoFor: LandingCopy["whoFor"] }) {
   return (
     <section className="py-16 md:py-24">
       <div className={`${container} grid items-center gap-10 md:grid-cols-[1fr_auto]`}>
@@ -203,8 +198,7 @@ export function WhoFor() {
   );
 }
 
-export function Beta() {
-  const { beta } = content;
+export function Beta({ beta }: { beta: LandingCopy["beta"] }) {
   return (
     <section id="beta" className="scroll-mt-20 px-4 sm:px-6">
       <div className="mx-auto grid max-w-6xl items-center gap-8 overflow-hidden rounded-[2.5rem] bg-leaf px-6 py-12 text-white sm:px-12 md:grid-cols-[1fr_auto] md:py-16">
@@ -212,7 +206,7 @@ export function Beta() {
           <h2 className={sectionHeading}>{beta.heading}</h2>
           <p className="mt-4 max-w-2xl text-lg text-white/90">{beta.body}</p>
           <div className="mt-8">
-            <BetaButtons location="beta_section" tone="dark" />
+            <BetaButtons location="beta_section" tone="dark" comingSoonNotice={beta.comingSoonNotice} />
           </div>
           <p className="text-white/90">
             {beta.feedback}{" "}
@@ -235,8 +229,7 @@ export function Beta() {
   );
 }
 
-export function Faq() {
-  const { faq } = content;
+export function Faq({ faq }: { faq: LandingCopy["faq"] }) {
   return (
     <section id="faq" className="scroll-mt-20 py-16 md:py-24">
       <div className={`${container} max-w-3xl`}>
@@ -259,12 +252,12 @@ export function Faq() {
   );
 }
 
-export function SiteFooter() {
+export function SiteFooter({ disclaimer }: { disclaimer: string }) {
   return (
     <footer className="border-t border-ink/10">
       <div className={`${container} flex flex-col gap-2 py-8 text-sm text-muted sm:flex-row sm:justify-between`}>
         <p>
-          © {COMPANY_NAME}. {content.footer.disclaimer}
+          © {COMPANY_NAME}. {disclaimer}
         </p>
         <nav aria-label="Legal and contact" className="flex flex-wrap gap-x-5 gap-y-1 font-bold">
           <Link href="/privacy" className="hover:text-ink">Privacy policy</Link>
