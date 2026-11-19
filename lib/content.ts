@@ -89,7 +89,7 @@ export const content = {
         body: "A payment is past due. Pippy naps until you come back, then perks right up.",
       },
     ],
-    quote: "Pippy isn't upset. It just missed you.",
+    quote: "Pippy can't pay your debt for you. But it'll sit with you through every payment.",
   },
 
   insideTheApp: {
