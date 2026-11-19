@@ -50,6 +50,8 @@ Legal text is no longer in git. Contentful's version history records each change
 - This repo uses `"use cache"`, `cacheTag` and `cacheLife`, not `unstable_cache`. `cacheComponents` is on for the whole app.
 - The backstop window is the `contentful` cache profile in `next.config.ts`: revalidate after 7 days. **This is not a bug.** It only matters when a webhook fails.
 - The webhook waits up to 8 seconds, not 15, for the Delivery API to serve the change. Each request gets the time left before that deadline. A timeout gets 503, and Contentful retries.
+- The webhook polls with the page reader's own query, not the entry ID. Contentful's CDN can cache two URLs apart, so the webhook checks the URL that the page reads.
+- A page read stops after 10 seconds. The landing page then uses the default copy, and a legal page throws.
 - The webhook calls `revalidateTag(tag, { expire: 0 })`, not `"max"`. With `"max"`, the first visit after a publish gets the old page. The webhook has already confirmed the new version, so no visitor needs the old page.
 - Reads use `fetch`, not the Contentful SDK.
 - **The default landing copy is cached, for minutes.** ADR-0003 decision 7 says a failure is never cached. Here the page output caches whatever the reader returns, so the default copy is cached too. A short `cacheLife("minutes")` makes the site read Contentful again within about a minute.
@@ -58,7 +60,8 @@ Legal text is no longer in git. Contentful's version history records each change
 
 ## Consequences
 
-- An editor sees a bad landing JSON only in the webhook activity log. Read the log after a large edit.
+- An editor sees a bad landing JSON only in the webhook activity log. Nothing alerts the editor.
+- A rejected entry stays the published version. The site keeps its cached copy only until the next rebuild: a deploy, the backstop, or another expiry. That rebuild reads the invalid entry and shows the default copy. We accept this limit. The README rule tells editors to fix or unpublish a rejected entry at once. To remove the limit, store the last approved copy outside Contentful, for example in Vercel Blob.
 - A change to the landing JSON shape needs a code change first. Deploy the code, then publish the new shape. In the other order, the webhook rejects the publish.
 - Each deploy reads each entry again. That costs 3 Delivery API calls per deploy.
 - A broken webhook is invisible for up to 7 days.

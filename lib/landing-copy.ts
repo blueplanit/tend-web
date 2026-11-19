@@ -5,6 +5,7 @@ import {
   CONTENT_TYPES,
   contentTag,
   findEntry,
+  type EntryLookup,
 } from "./contentful/delivery";
 import { DEFAULT_LANDING_COPY } from "./content";
 
@@ -64,6 +65,11 @@ export type Faq = z.infer<typeof faqSchema>;
 
 export const LANDING_PAGE_KEY = "landing";
 export const LANDING_TAG = contentTag(CONTENT_TYPES.pageCopy, LANDING_PAGE_KEY);
+export const LANDING_LOOKUP: EntryLookup = {
+  contentType: CONTENT_TYPES.pageCopy,
+  field: "pageKey",
+  value: LANDING_PAGE_KEY,
+};
 
 // Reads the landing copy from Contentful. On any failure it returns the default copy
 // and caches that for minutes only, so the site picks up Contentful again soon.
@@ -72,7 +78,7 @@ export async function getLandingCopy(): Promise<LandingCopy> {
   cacheTag(LANDING_TAG);
 
   try {
-    const entry = await findEntry(CONTENT_TYPES.pageCopy, "pageKey", LANDING_PAGE_KEY);
+    const entry = await findEntry(LANDING_LOOKUP);
     if (!entry) throw new Error(`No published pageCopy entry "${LANDING_PAGE_KEY}".`);
 
     const parsed = landingCopySchema.safeParse(entry.fields.copy);

@@ -1,5 +1,6 @@
-// Reads published entries from the Contentful Delivery API (CDA) with plain fetch.
-// The callers cache each read with "use cache". See docs/adr/0001-contentful-content.md
+// Reads published entries from the Contentful Delivery API with plain fetch.
+// The page readers cache each read with "use cache". The webhook reads uncached.
+// See docs/adr/0001-contentful-content.md
 // and asv2-web docs/adr/0003-contentful-delivery-quota.md for the caching design.
 
 export const CONTENT_TYPES = {
@@ -55,34 +56,27 @@ function toEntry(item: CdaEntry): DeliveredEntry {
   return { id: item.sys.id, updatedAt: item.sys.updatedAt, fields: item.fields };
 }
 
-// Returns the one published entry of a content type whose field has the value, or null.
+// Names one entry by a unique field. A page reader and the webhook pass the same
+// lookup, so both read the same Delivery API URL and see the same cached response.
+export type EntryLookup = { contentType: ContentType; field: string; value: string };
+
+// A stalled read fails after this time. A reader then uses its failure path.
+const READ_TIMEOUT_MS = 10_000;
+
+// Returns the one published entry that matches the lookup, or null.
+// The signal aborts both the request and the body read.
 export async function findEntry(
-  contentType: ContentType,
-  field: string,
-  value: string,
+  { contentType, field, value }: EntryLookup,
+  signal: AbortSignal = AbortSignal.timeout(READ_TIMEOUT_MS),
 ): Promise<DeliveredEntry | null> {
-  const response = await cdaGet("/entries", {
-    content_type: contentType,
-    [`fields.${field}`]: value,
-    limit: "1",
-  });
+  const response = await cdaGet(
+    "/entries",
+    { content_type: contentType, [`fields.${field}`]: value, limit: "1" },
+    signal,
+  );
   if (!response.ok) {
     throw new Error(`Contentful ${contentType} read failed: HTTP ${response.status}`);
   }
   const body = (await response.json()) as { items: CdaEntry[] };
   return body.items[0] ? toEntry(body.items[0]) : null;
-}
-
-// Returns the published entry, or null when the Delivery API does not serve it.
-// The signal aborts both the request and the body read.
-export async function getEntry(
-  entryId: string,
-  signal?: AbortSignal,
-): Promise<DeliveredEntry | null> {
-  const response = await cdaGet(`/entries/${encodeURIComponent(entryId)}`, {}, signal);
-  if (response.status === 404) return null;
-  if (!response.ok) {
-    throw new Error(`Contentful entry ${entryId} read failed: HTTP ${response.status}`);
-  }
-  return toEntry((await response.json()) as CdaEntry);
 }

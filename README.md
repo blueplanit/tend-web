@@ -69,7 +69,26 @@ Paste the link into `BETA_LINKS` in `lib/site.ts`. The button then links to the 
 
 Edit the entry in Contentful and publish it. The webhook expires that page's cache at once. The next visit rebuilds the page with the new copy. There is no preview. Check the JSON before you publish.
 
-- **Landing page:** the `landing` entry of the Page copy type. Keep the keys and the shape. The webhook rejects JSON that fails the schema in `lib/landing-copy.ts`. The site then keeps the last good copy. Contentful shows the rejection under Settings → Webhooks → Activity log: 422 for an invalid publish, 409 when a later invalid publish overtook a valid one.
+- **Landing page:** the `landing` entry of the Page copy type. Keep the keys and the shape. The JSON must pass the schema in `lib/landing-copy.ts`.
+
+### After you publish
+
+Contentful always accepts the publish. The webhook decides if the site uses it.
+
+1. Reload the live site. A valid publish shows on the next page load.
+2. If your change is not there, open Settings → Webhooks → "tend-web revalidate (production)" → Activity log.
+3. Open the newest call. Its response body names the error.
+4. Fix the entry and publish again. If you cannot fix it now, unpublish your change. Do it at once.
+
+| Status | Meaning |
+|---|---|
+| 200 | The site uses the new copy. |
+| 422 | The published JSON is invalid. The site keeps its cached copy. |
+| 409 | A later, invalid publish replaced a valid one. The site keeps its cached copy. |
+| 401 | The secret in Vercel and the webhook differ. |
+| 503 | Contentful was slow. Contentful retries the call. |
+
+**Why step 4 is urgent:** an invalid entry stays the published version. The site keeps its cached copy only until the next rebuild. A deploy or the 7-day backstop then reads the invalid entry, and the site shows the default copy from `lib/content.ts`. Nothing alerts you to a 422.
 - **Privacy policy and terms of use:** the Legal document entries. Change "Last updated" for a real policy change only, not for a typo fix.
 
 A new page section or a new field needs a code change and a deploy.

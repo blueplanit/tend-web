@@ -5,6 +5,7 @@ import {
   CONTENT_TYPES,
   contentTag,
   findEntry,
+  type EntryLookup,
 } from "./contentful/delivery";
 
 // The privacy policy and the terms of use live in Contentful legalDocument entries.
@@ -31,8 +32,12 @@ export const legalDocumentSchema = z.object({
 
 export type LegalDocument = z.infer<typeof legalDocumentSchema>;
 
-export function legalTag(slug: string) {
+export function legalTag(slug: LegalSlug) {
   return contentTag(CONTENT_TYPES.legalDocument, slug);
+}
+
+export function legalLookup(slug: LegalSlug): EntryLookup {
+  return { contentType: CONTENT_TYPES.legalDocument, field: "slug", value: slug };
 }
 
 export async function getLegalDocument(slug: LegalSlug): Promise<LegalDocument> {
@@ -40,7 +45,7 @@ export async function getLegalDocument(slug: LegalSlug): Promise<LegalDocument> 
   cacheTag(legalTag(slug));
   cacheLife(CONTENTFUL_CACHE_PROFILE);
 
-  const entry = await findEntry(CONTENT_TYPES.legalDocument, "slug", slug);
+  const entry = await findEntry(legalLookup(slug));
   if (!entry) throw new Error(`No published legalDocument entry "${slug}".`);
   return legalDocumentSchema.parse(entry.fields);
 }
