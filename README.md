@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# tend-web
 
-## Getting Started
+The landing page for Tend, a Blue Planit LLC app. Jira story: BP-1351.
 
-First, run the development server:
+Marketing rules, terms and the brand kit live in the `tend-marketing` repo.
+
+## Run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
+npm run build
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Where things are
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Path | Holds |
+|---|---|
+| `lib/content.ts` | All page copy. Contentful replaces it later. |
+| `lib/site.ts` | Site URL, feedback email and the beta install links |
+| `components/landing/` | Page sections and the beta buttons |
+| `lib/analytics/` | Amplitude, GA4 and UTM pass-through to Google Play |
+| `components/structured-data.tsx` | JSON-LD for search engines and AI assistants |
+| `app/robots.ts`, `app/sitemap.ts`, `app/opengraph-image.tsx` | SEO files |
+| `public/pippy/`, `public/screens/` | Brand kit assets |
+| `app/fonts/` | Fredoka and Nunito, stored so a build needs no network |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment variables
 
-## Learn More
+Set these in Vercel. Each one is optional. A missing key turns its feature off.
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Use |
+|---|---|
+| `NEXT_PUBLIC_AMPLITUDE_API_KEY` | Amplitude project key |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | GA4 measurement ID, `G-…` |
+| `NEXT_PUBLIC_SITE_URL` | The final domain. The default is the Vercel URL. |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Analytics and indexing run on the production deployment only. The site reads `VERCEL_ENV` and `NEXT_PUBLIC_VERCEL_ENV` to know this. Keep "Automatically expose System Environment Variables" on in Vercel.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Events
 
-## Deploy on Vercel
+| Amplitude | GA4 | Properties |
+|---|---|---|
+| `[Amplitude] Page Viewed` | `page_view` | UTM parameters and referrer, captured automatically |
+| `Beta Button Clicked` | `beta_button_click` | `platform`, `location`, `available` |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+A click on a "Coming soon" button sends `available: false`. That measures demand for each platform before the beta opens.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Add a beta link
+
+Paste the link into `BETA_LINKS` in `lib/site.ts`. The button then links to the store. An Android link also carries the visit's UTM parameters as the Play `referrer`.
