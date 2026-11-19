@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { content } from "@/lib/content";
 import { COMPANY_NAME, FEEDBACK_EMAIL } from "@/lib/site";
 import { BetaButtons } from "./beta-buttons";
@@ -11,26 +12,26 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-20 border-b border-ink/5 bg-mist/90 backdrop-blur">
       <div className={`${container} flex items-center justify-between gap-4 py-3`}>
-        <a
-          href="#top"
+        <Link
+          href="/"
           className="flex items-center gap-2 font-display text-2xl font-semibold"
         >
           <Image src="/pippy/pippy-content.svg" alt="" width={36} height={36} unoptimized />
           Tend
-        </a>
+        </Link>
         <nav aria-label="Main" className="hidden items-center gap-7 font-bold text-muted md:flex">
           {content.nav.map((item) => (
-            <a key={item.href} href={item.href} className="hover:text-ink">
+            <Link key={item.href} href={item.href} className="hover:text-ink">
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
-        <a
-          href="#beta"
+        <Link
+          href="/#beta"
           className="rounded-full bg-leaf px-4 py-2 text-sm font-bold text-white hover:bg-leaf-dark"
         >
           Get the beta
-        </a>
+        </Link>
       </div>
     </header>
   );
@@ -265,9 +266,13 @@ export function SiteFooter() {
         <p>
           © {COMPANY_NAME}. {content.footer.disclaimer}
         </p>
-        <a href={`mailto:${FEEDBACK_EMAIL}`} className="font-bold hover:text-ink">
-          {FEEDBACK_EMAIL}
-        </a>
+        <nav aria-label="Legal and contact" className="flex flex-wrap gap-x-5 gap-y-1 font-bold">
+          <Link href="/privacy" className="hover:text-ink">Privacy policy</Link>
+          <Link href="/terms" className="hover:text-ink">Terms of use</Link>
+          <a href={`mailto:${FEEDBACK_EMAIL}`} className="hover:text-ink">
+            {FEEDBACK_EMAIL}
+          </a>
+        </nav>
       </div>
     </footer>
   );

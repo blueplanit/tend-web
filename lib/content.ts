@@ -29,9 +29,9 @@ export const content = {
   },
 
   nav: [
-    { label: "How it works", href: "#how-it-works" },
-    { label: "Meet Pippy", href: "#meet-pippy" },
-    { label: "FAQ", href: "#faq" },
+    { label: "How it works", href: "/#how-it-works" },
+    { label: "Meet Pippy", href: "/#meet-pippy" },
+    { label: "FAQ", href: "/#faq" },
   ],
 
   hero: {
