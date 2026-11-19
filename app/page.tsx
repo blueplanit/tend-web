@@ -13,7 +13,7 @@ import {
 import { getLandingCopy } from "@/lib/landing-copy";
 
 export default async function Home() {
-  const copy = await getLandingCopy();
+  const { copy } = await getLandingCopy();
   return (
     <>
       <SiteHeader nav={copy.nav} />

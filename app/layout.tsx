@@ -22,9 +22,15 @@ const nunito = localFont({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { meta } = await getLandingCopy();
+  const {
+    copy: { meta },
+    source,
+  } = await getLandingCopy();
   return {
     metadataBase: new URL(SITE_URL),
+    // An UptimeRobot keyword monitor reads the homepage. It emails a Founder when
+    // the homepage shows content="default". See docs/adr/0001, Consequences.
+    other: { "tend-copy-source": source },
     title: { default: meta.title, template: `%s | ${SITE_NAME}` },
     description: meta.description,
     applicationName: SITE_NAME,
@@ -51,7 +57,9 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const { meta } = await getLandingCopy();
+  const {
+    copy: { meta },
+  } = await getLandingCopy();
   return (
     <html
       lang="en"

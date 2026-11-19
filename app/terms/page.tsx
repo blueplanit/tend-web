@@ -14,6 +14,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function TermsPage() {
-  const [doc, copy] = await Promise.all([getLegalDocument("terms"), getLandingCopy()]);
+  const [doc, { copy }] = await Promise.all([getLegalDocument("terms"), getLandingCopy()]);
   return <LegalPage doc={doc} copy={copy} />;
 }
