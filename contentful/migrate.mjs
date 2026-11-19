@@ -1,5 +1,5 @@
 // Runs Contentful migration files against the TendApp space, in the order given.
-// Usage: npm run contentful:migrate -- contentful/migrations/005-add-field.cjs
+// Usage: npm run contentful:migrate -- contentful/migrations/006-add-field.cjs
 // Run each file once only. Contentful does not record which files ran.
 import path from "node:path";
 import contentfulMigration from "contentful-migration";

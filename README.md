@@ -11,6 +11,7 @@ npm install
 npm run dev      # http://localhost:3000
 npm run build
 npm run lint
+npm test         # Vitest
 ```
 
 ## Where things are
@@ -81,7 +82,11 @@ Contentful always accepts the publish. The webhook decides if the site uses it.
 1. Reload the live site. A valid publish shows on the next page load.
 2. If your change is not there, open Settings → Webhooks → "tend-web revalidate (production)" → Activity log.
 3. Open the newest call. Its response body names the error.
-4. Fix the entry and publish again. If you cannot fix it now, unpublish your change. Do it at once.
+4. Do one of these at once:
+   - Fix the entry and publish it again.
+   - Restore the last good version. Open the entry's Versions sidebar, restore the last good version, and publish it.
+
+**Never unpublish or delete the `landing` entry or a Legal document entry.** Contentful then serves no entry at all, not an earlier version. The webhook ignores the change. The site looks fine until the next rebuild. Then the landing page shows the default copy. A legal page then blocks every deploy. A deleted entry also loses its version history.
 
 | Status | Response body | Meaning |
 |---|---|---|
@@ -97,10 +102,10 @@ Contentful always accepts the publish. The webhook decides if the site uses it.
 
 ## Change the content model
 
-Add a file to `contentful/migrations/`. Give it the next free number, for example `005-add-field.cjs`. Then run it once:
+Add a file to `contentful/migrations/`. Give it the next free number, for example `006-add-field.cjs`. Then run it once:
 
 ```bash
-npm run contentful:migrate -- contentful/migrations/005-add-field.cjs
+npm run contentful:migrate -- contentful/migrations/006-add-field.cjs
 ```
 
 Contentful does not record which migrations ran. Run each file once only.

@@ -9,9 +9,9 @@ import {
 } from "./contentful/delivery";
 
 // The privacy policy and the terms of use live in Contentful legalDocument entries.
-// Contentful's version history is their only record. There is no fallback copy:
-// a failed read throws, so the site keeps serving the last good page and a fresh
-// build fails loudly. See docs/adr/0001-contentful-content.md.
+// Contentful's version history is their only record. There is no default copy.
+// A failed read throws. The site keeps serving the last good page, and a fresh
+// build fails. See docs/adr/0001-contentful-content.md.
 
 export const LEGAL_SLUGS = ["privacy", "terms"] as const;
 export type LegalSlug = (typeof LEGAL_SLUGS)[number];

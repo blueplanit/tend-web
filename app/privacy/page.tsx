@@ -14,6 +14,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PrivacyPage() {
-  const [doc, copy] = await Promise.all([getLegalDocument("privacy"), getLandingCopy()]);
+  const [doc, { copy }] = await Promise.all([getLegalDocument("privacy"), getLandingCopy()]);
   return <LegalPage doc={doc} copy={copy} />;
 }

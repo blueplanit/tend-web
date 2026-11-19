@@ -34,12 +34,16 @@ There is no preview. The webhook activity log in Contentful is the only place a 
 
 ### 4. Only a publish changes the site
 
-The webhook ignores unpublish, archive and delete. A Founder cannot take down the landing page or a legal page from Contentful by mistake. To remove a page, change the code.
+The webhook ignores unpublish, archive and delete. These pages always need their entry. No removal is a valid edit. To remove a page, change the code.
 
-### 5. Fallbacks differ by page
+Ignoring a removal only delays its effect. Contentful then serves no entry, not an earlier version. At the next rebuild, the landing page shows the default copy, and a legal page fails the build. A failed build blocks every deploy until the entry is published again. The README tells a Founder never to unpublish or delete these entries.
 
-- **Landing page:** on any failed or invalid read, it shows `lib/content.ts`. That copy stays cached for minutes only (`cacheLife("minutes")`), so the site reads Contentful again soon. `lib/content.ts` is not kept in sync with Contentful. Old marketing copy is harmless.
-- **Legal pages:** no fallback. A failed read throws. Vercel keeps serving the last good page, and a fresh build fails loudly. Old legal text with an old date is worse than a failed build.
+Expiring the cache on a removal makes this worse. `{ expire: 0 }` serves no stale page. A legal page then fails on the next visit.
+
+### 5. Only the landing page has a default copy
+
+- **Landing page:** on any failed or invalid read, it shows the default copy in `lib/content.ts`. That copy stays cached for minutes only (`cacheLife("minutes")`), so the site reads Contentful again soon. `lib/content.ts` is not kept in sync with Contentful. Old marketing copy is harmless.
+- **Legal pages:** no default copy. A failed read throws. Vercel keeps serving the last good page, and a fresh build fails loudly. Old legal text with an old date is worse than a failed build.
 
 ### 6. Contentful history is the only legal record
 
@@ -60,8 +64,9 @@ Legal text is no longer in git. Contentful's version history records each change
 
 ## Consequences
 
-- A Founder sees a rejected entry only in the webhook activity log. Nothing alerts the Founder.
-- A rejected entry stays the published version. The site keeps its cached copy only until the next rebuild: a deploy, the backstop, or another expiry. That rebuild reads the invalid entry. The landing page shows the default copy, and a legal page fails the build. We accept this limit. The README rule tells a Founder to fix or unpublish a rejected entry at once. To remove the limit, store the last approved copy outside Contentful, for example in Vercel Blob.
+- A Founder sees a rejected entry in the webhook activity log. Nothing alerts the Founder until a rebuild reads the rejected entry.
+- Each page states its copy source in a meta tag: `tend-copy-source` is `contentful` or `default`. An UptimeRobot keyword monitor reads the homepage every 5 minutes. It emails a Founder when the homepage shows `content="default"`. It sees only what the cached page holds. It cannot see an invalid entry that no rebuild has read yet.
+- A rejected entry stays the published version. The site keeps its cached copy only until the next rebuild: a deploy, the backstop, or another expiry. That rebuild reads the invalid entry. The landing page shows the default copy, and a legal page fails the build. We accept this limit. The README rule tells a Founder to act at once: fix and republish the entry, or restore its last good version and publish that. To remove the limit, store the last approved copy outside Contentful, for example in Vercel Blob.
 - A change to the landing JSON shape needs a code change first. Deploy the code, then publish the new shape. In the other order, the webhook rejects the publish.
 - Each deploy reads each entry again. That costs 3 Delivery API calls per deploy.
 - A broken webhook is invisible for up to 7 days.

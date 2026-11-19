@@ -71,9 +71,14 @@ export const LANDING_LOOKUP: EntryLookup = {
   value: LANDING_PAGE_KEY,
 };
 
-// Reads the landing copy from Contentful. On any failure it returns the default copy
-// and caches that for minutes only, so the site picks up Contentful again soon.
-export async function getLandingCopy(): Promise<LandingCopy> {
+// Where the landing copy came from. The root layout prints it in the
+// tend-copy-source meta tag. A monitor alerts on "default".
+export type CopySource = "contentful" | "default";
+export type LandingCopyRead = { copy: LandingCopy; source: CopySource };
+
+// Reads the landing copy from Contentful. On any failure it returns the default copy.
+// It caches the default copy for minutes only, so the site reads Contentful again soon.
+export async function getLandingCopy(): Promise<LandingCopyRead> {
   "use cache";
   cacheTag(LANDING_TAG);
 
@@ -87,10 +92,10 @@ export async function getLandingCopy(): Promise<LandingCopy> {
     }
 
     cacheLife(CONTENTFUL_CACHE_PROFILE);
-    return parsed.data;
+    return { copy: parsed.data, source: "contentful" };
   } catch (error) {
     console.error("getLandingCopy: using the default copy.", error);
     cacheLife("minutes");
-    return DEFAULT_LANDING_COPY;
+    return { copy: DEFAULT_LANDING_COPY, source: "default" };
   }
 }
