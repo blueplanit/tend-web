@@ -20,4 +20,4 @@ These rules apply to all user-facing copy: page text, alt text, metadata and ima
 - Ground each metaphor in its financial concept. Follow the metaphor with a short, plain sentence about the mechanics. Example: "Each weed regrows a little every night" comes with what interest is and how it adds up.
 - Brand copy says "we". No promised outcomes. No financial advice. No shame or fear.
 - Each product fact comes from the prototype. Check it against the current app before you push.
-- All page copy lives in `lib/content.ts`.
+- The live copy lives in Contentful (space TendApp). These rules apply there too. `lib/content.ts` holds the default landing copy only. See `docs/adr/0001-contentful-content.md`.

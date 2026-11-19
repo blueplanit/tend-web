@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
-import { privacyPolicy } from "@/lib/legal";
+import { getLandingCopy } from "@/lib/landing-copy";
+import { getLegalDocument } from "@/lib/legal-documents";
 
-export const metadata: Metadata = {
-  title: privacyPolicy.title,
-  description: privacyPolicy.description,
-  alternates: { canonical: "/privacy" },
-  openGraph: { url: "/privacy", title: privacyPolicy.title, description: privacyPolicy.description },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { title, description } = await getLegalDocument("privacy");
+  return {
+    title,
+    description,
+    alternates: { canonical: "/privacy" },
+    openGraph: { url: "/privacy", title, description },
+  };
+}
 
-export default function PrivacyPage() {
-  return <LegalPage doc={privacyPolicy} />;
+export default async function PrivacyPage() {
+  const [doc, copy] = await Promise.all([getLegalDocument("privacy"), getLandingCopy()]);
+  return <LegalPage doc={doc} copy={copy} />;
 }

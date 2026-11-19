@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { content } from "@/lib/content";
 import { EVENTS, trackEvent } from "@/lib/analytics/events";
 import { withStoreAttribution } from "@/lib/analytics/store-attribution";
 import { BETA_LINKS, type BetaPlatform } from "@/lib/site";
@@ -14,11 +13,12 @@ const PLATFORMS: { key: BetaPlatform; label: string }[] = [
 type Props = {
   location: "hero" | "beta_section";
   tone?: "light" | "dark";
+  comingSoonNotice: string;
 };
 
 // Before a beta link exists, the button still counts clicks. That measures
 // demand for each platform before the beta opens.
-export function BetaButtons({ location, tone = "light" }: Props) {
+export function BetaButtons({ location, tone = "light", comingSoonNotice }: Props) {
   const [showNotice, setShowNotice] = useState(false);
 
   const buttonClass =
@@ -87,7 +87,7 @@ export function BetaButtons({ location, tone = "light" }: Props) {
         role="status"
         className={`mt-3 min-h-6 text-sm ${tone === "light" ? "text-muted" : "text-white/85"}`}
       >
-        {showNotice ? content.beta.comingSoonNotice : ""}
+        {showNotice ? comingSoonNotice : ""}
       </p>
     </div>
   );

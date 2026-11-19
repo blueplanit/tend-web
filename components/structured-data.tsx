@@ -1,4 +1,4 @@
-import { content, type Faq } from "@/lib/content";
+import type { Faq } from "@/lib/landing-copy";
 import { COMPANY_NAME, FEEDBACK_EMAIL, SITE_NAME, SITE_URL } from "@/lib/site";
 
 // JSON-LD tells search engines and AI assistants what the page describes.
@@ -14,7 +14,7 @@ function JsonLd({ data }: { data: Record<string, unknown> }) {
   );
 }
 
-export function SiteStructuredData() {
+export function SiteStructuredData({ description }: { description: string }) {
   return (
     <JsonLd
       data={{
@@ -41,7 +41,7 @@ export function SiteStructuredData() {
             url: SITE_URL,
             operatingSystem: "Android, iOS",
             applicationCategory: "FinanceApplication",
-            description: content.meta.description,
+            description,
             publisher: { "@id": `${SITE_URL}/#organization` },
           },
         ],

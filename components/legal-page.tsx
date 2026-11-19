@@ -1,56 +1,50 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import Markdown, { type Components } from "react-markdown";
 import { SiteFooter, SiteHeader } from "@/components/landing/sections";
-import type { LegalBlock, LegalDoc } from "@/lib/legal";
+import type { LandingCopy } from "@/lib/landing-copy";
+import type { LegalDocument } from "@/lib/legal-documents";
 
-// Renders **bold** and [text](url) inside one line of legal text.
-function inline(text: string): ReactNode[] {
-  const parts: ReactNode[] = [];
-  const pattern = /\*\*(.+?)\*\*|\[(.+?)\]\((.+?)\)/g;
-  let last = 0;
-  let match: RegExpExecArray | null;
-  while ((match = pattern.exec(text))) {
-    if (match.index > last) parts.push(text.slice(last, match.index));
-    if (match[1]) {
-      parts.push(<strong key={match.index} className="font-bold text-ink">{match[1]}</strong>);
-    } else {
-      const href = match[3];
-      const className = "font-bold text-leaf underline underline-offset-4 hover:text-leaf-dark";
-      if (href.startsWith("/")) {
-        parts.push(<Link key={match.index} href={href} className={className}>{match[2]}</Link>);
-      } else {
-        const external = href.startsWith("http");
-        parts.push(
-          <a
-            key={match.index}
-            href={href}
-            className={className}
-            {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-          >
-            {match[2]}
-          </a>,
-        );
-      }
+const linkClass = "font-bold text-leaf underline underline-offset-4 hover:text-leaf-dark";
+
+// The legal body is Markdown from Contentful. Raw HTML is never rendered.
+const ALLOWED_ELEMENTS = ["p", "h2", "h3", "ul", "ol", "li", "strong", "em", "a", "br"];
+
+const components: Components = {
+  h2: ({ children }) => (
+    <h2 className="mt-10 font-display text-2xl font-semibold text-ink">{children}</h2>
+  ),
+  h3: ({ children }) => (
+    <h3 className="mt-6 font-display text-xl font-semibold text-ink">{children}</h3>
+  ),
+  p: ({ children }) => <p className="mt-3">{children}</p>,
+  ul: ({ children }) => (
+    <ul className="mt-3 list-disc space-y-2 pl-6 marker:text-sprout">{children}</ul>
+  ),
+  ol: ({ children }) => <ol className="mt-3 list-decimal space-y-2 pl-6">{children}</ol>,
+  strong: ({ children }) => <strong className="font-bold text-ink">{children}</strong>,
+  a: ({ href = "", children }) => {
+    if (href.startsWith("/")) {
+      return (
+        <Link href={href} className={linkClass}>
+          {children}
+        </Link>
+      );
     }
-    last = pattern.lastIndex;
-  }
-  if (last < text.length) parts.push(text.slice(last));
-  return parts;
-}
+    const external = href.startsWith("http");
+    return (
+      <a
+        href={href}
+        className={linkClass}
+        {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      >
+        {children}
+      </a>
+    );
+  },
+};
 
-function Block({ block }: { block: LegalBlock }) {
-  if (typeof block === "string") return <p>{inline(block)}</p>;
-  return (
-    <ul className="list-disc space-y-2 pl-6 marker:text-sprout">
-      {block.list.map((item) => (
-        <li key={item}>{inline(item)}</li>
-      ))}
-    </ul>
-  );
-}
-
-function formatDate(iso: string) {
-  return new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-US", {
+function formatDate(isoDate: string) {
+  return new Date(`${isoDate}T12:00:00Z`).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -58,10 +52,10 @@ function formatDate(iso: string) {
   });
 }
 
-export function LegalPage({ doc }: { doc: LegalDoc }) {
+export function LegalPage({ doc, copy }: { doc: LegalDocument; copy: LandingCopy }) {
   return (
     <>
-      <SiteHeader />
+      <SiteHeader nav={copy.nav} />
       <main className="flex-1 px-4 py-12 sm:px-6 md:py-16">
         <article className="mx-auto max-w-3xl rounded-[2rem] bg-white px-6 py-10 sm:px-10 md:py-12">
           <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl">
@@ -70,24 +64,18 @@ export function LegalPage({ doc }: { doc: LegalDoc }) {
           <p className="mt-3 text-sm text-muted">
             Last updated <time dateTime={doc.lastUpdated}>{formatDate(doc.lastUpdated)}</time>
           </p>
-          <div className="mt-8 space-y-4 text-lg text-muted">
-            {doc.intro.map((block, i) => (
-              <Block key={i} block={block} />
-            ))}
+          <div className="mt-5 text-muted">
+            <Markdown
+              allowedElements={ALLOWED_ELEMENTS}
+              unwrapDisallowed
+              components={components}
+            >
+              {doc.body}
+            </Markdown>
           </div>
-          {doc.sections.map((section) => (
-            <section key={section.heading} className="mt-10">
-              <h2 className="font-display text-2xl font-semibold">{section.heading}</h2>
-              <div className="mt-3 space-y-3 text-muted">
-                {section.blocks.map((block, i) => (
-                  <Block key={i} block={block} />
-                ))}
-              </div>
-            </section>
-          ))}
         </article>
       </main>
-      <SiteFooter />
+      <SiteFooter disclaimer={copy.footer.disclaimer} />
     </>
   );
 }
