@@ -9,8 +9,11 @@
 // - Brand copy says "we".
 // - No promised outcomes. No financial advice. No shame or fear.
 // - Pippy is never sad, sick or gone.
-// - Use the terms in tend-marketing GLOSSARY.md: Garden, Weed, Mood, Check-in,
-//   Extra Payment.
+// - Use the terms in tend-marketing GLOSSARY.md: garden, weed, mood, check-in,
+//   extra payment. Write them in lowercase. Only names keep a capital: Tend, Pippy.
+// - A metaphor always comes with the financial concept behind it. For example,
+//   "a weed regrows" comes with what interest is and how it adds up.
+// See AGENTS.md "Copy rules".
 // - Each product fact comes from the prototype. Check it against the current app
 //   before you push a change that adds one.
 
@@ -22,7 +25,7 @@ export const content = {
   meta: {
     title: "Tend: a calmer way to pay down debt",
     description:
-      "Tend is a debt payoff app with Pippy, a calm little creature that lives in your Garden. Log your payments and see your progress. The beta is coming soon.",
+      "Tend is a debt payoff app with Pippy, a calm little creature that lives in your garden. Log your payments and see your progress. The beta is coming soon.",
   },
 
   nav: [
@@ -35,27 +38,27 @@ export const content = {
     eyebrow: "Beta coming soon on Android and iPhone",
     // Other headline options for Founder review:
     // "A calmer way to keep up with your debt."
-    // "Small payments. A happier Garden."
-    headline: "Your debts are Weeds. Pippy helps you tend them.",
+    // "Small payments. A happier garden."
+    headline: "Your debts are weeds. Pippy helps you tend them.",
     subhead:
-      "Tend is a debt payoff app with a small, calm creature called Pippy. Log your payments, answer a quick Check-in, and Pippy stays content in its Garden.",
-    mediaLabel: "Pippy, content and breathing slowly, in its Garden",
+      "Tend is a cozy debt payoff app. Meet Pippy, a small, unhurried creature who lives in your garden and is always glad to see you. Log a payment, and Pippy hums and waters its plant. Step away for a while, and it naps until you're back.",
+    mediaLabel: "Pippy, content and breathing slowly, in its garden",
   },
 
   howItWorks: {
     heading: "How Tend works",
     steps: [
       {
-        title: "Plant your Weeds",
-        body: "Add each debt as a Weed: a credit card, a student loan, a car loan. Each Weed shows how much interest it regrows each night.",
+        title: "Plant your weeds",
+        body: "Add each debt as a weed: a credit card, a student loan, a car loan. Each weed regrows a little every night. That regrowth is interest: the debt's balance times its interest rate (APR), divided by 365, added each day.",
       },
       {
-        title: "Answer a Check-in",
-        body: "When a payment is due, Tend asks one question: did it get paid? “It's a tight month” is always a fine answer.",
+        title: "Answer a check-in",
+        body: "When a payment is due, Tend asks if you made it. Answer yes, enter the amount you paid, or choose “It's a tight month”. Tend records the payment against that debt's balance.",
       },
       {
         title: "See your progress",
-        body: "Your Garden shows what you paid and what is left. The month calendar shows each payment and each Extra Payment.",
+        body: "Your garden shows how much of your debt you have paid and how much is left. The month calendar marks each on-time payment and each extra payment: any amount above the minimum. An extra payment lowers the balance faster, so the weed regrows less interest each night.",
       },
     ],
   },
@@ -63,7 +66,7 @@ export const content = {
   meetPippy: {
     heading: "Meet Pippy",
     intro:
-      "Pippy lives in your Garden. Its Mood follows your payments. Pippy is never sad, sick or disappointed in you.",
+      "Pippy lives in your garden. Its mood follows your payments. Pippy is never sad, sick or disappointed in you.",
     moods: [
       {
         key: "content",
@@ -94,27 +97,27 @@ export const content = {
     screens: [
       {
         src: "/screens/garden.png",
-        title: "Your Garden",
-        body: "Your Weeds, their balances and your progress, on one screen.",
-        alt: "The Tend home screen. Pippy is content. Three Weeds show a credit card, a student loan and a car loan.",
+        title: "Your garden",
+        body: "Your weeds, their balances and your progress, on one screen.",
+        alt: "The Tend home screen. Pippy is content. Three weeds show a credit card, a student loan and a car loan.",
       },
       {
         src: "/screens/widget.png",
         title: "Home screen widget",
-        body: "Pippy's Mood and your progress, right on your phone's home screen.",
+        body: "Pippy's mood and your progress, right on your phone's home screen.",
         alt: "A phone home screen with a Tend notification and two Tend widgets that show Pippy and progress.",
       },
       {
         src: "/screens/calendar.png",
         title: "Pippy's month",
-        body: "Pippy's Mood for each day, with payments on time and Extra Payments.",
-        alt: "A month calendar with Pippy's Mood on each day, and totals for the month.",
+        body: "Pippy's mood for each day, with on-time payments and extra payments.",
+        alt: "A month calendar with Pippy's mood on each day, and totals for the month.",
       },
       {
         src: "/screens/check-in.png",
         title: "Check-in",
         body: "One question, with answers that never judge.",
-        alt: "A Check-in that asks whether a Visa payment got paid. One answer is “It's a tight month”.",
+        alt: "A check-in that asks whether a Visa payment got paid. One answer is “It's a tight month”.",
       },
     ],
     note: "The screens show sample data. Tend is in development, so the app can change.",
@@ -125,7 +128,7 @@ export const content = {
     points: [
       "You have more than one credit card balance.",
       "You can make the minimum payments.",
-      "You want to make Extra Payments more often.",
+      "You want to make extra payments more often.",
       "You want an easy way to see your progress.",
     ],
   },
