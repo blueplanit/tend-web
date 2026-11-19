@@ -33,7 +33,7 @@ export function BetaButtons({ location, tone = "light" }: Props) {
       <div className="flex flex-col gap-3 sm:flex-row">
         {PLATFORMS.map(({ key, label }) => {
           const link = BETA_LINKS[key];
-          const className = `inline-flex min-h-12 items-center justify-center gap-3 rounded-full px-6 py-3 text-base font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${buttonClass}`;
+          const className = `inline-flex min-h-12 cursor-pointer items-center justify-center gap-3 rounded-full px-6 py-3 text-base font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${buttonClass}`;
 
           if (link) {
             return (
