@@ -20,3 +20,10 @@ export const BETA_LINKS: Record<BetaPlatform, string | null> = {
 // Vercel sets VERCEL_ENV, and exposes it to the browser as NEXT_PUBLIC_VERCEL_ENV.
 export const IS_PRODUCTION_DEPLOYMENT =
   (process.env.VERCEL_ENV ?? process.env.NEXT_PUBLIC_VERCEL_ENV) === "production";
+
+// Set NEXT_PUBLIC_ANALYTICS_LOCAL=true in .env.local to test analytics on your machine.
+// GA4 then runs in debug mode, so test events show in DebugView.
+export const IS_LOCAL_ANALYTICS_TEST =
+  !IS_PRODUCTION_DEPLOYMENT && process.env.NEXT_PUBLIC_ANALYTICS_LOCAL === "true";
+
+export const ANALYTICS_ENABLED = IS_PRODUCTION_DEPLOYMENT || IS_LOCAL_ANALYTICS_TEST;

@@ -3,7 +3,7 @@
 import Script from "next/script";
 import { useEffect } from "react";
 import { initAmplitude } from "@/lib/analytics/amplitude";
-import { IS_PRODUCTION_DEPLOYMENT } from "@/lib/site";
+import { ANALYTICS_ENABLED, IS_LOCAL_ANALYTICS_TEST } from "@/lib/site";
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
@@ -14,7 +14,8 @@ export function Analytics() {
     initAmplitude();
   }, []);
 
-  if (!GA_MEASUREMENT_ID || !IS_PRODUCTION_DEPLOYMENT) return null;
+  if (!GA_MEASUREMENT_ID || !ANALYTICS_ENABLED) return null;
+  const gaConfig = IS_LOCAL_ANALYTICS_TEST ? ", { debug_mode: true }" : "";
 
   return (
     <>
@@ -28,7 +29,7 @@ export function Analytics() {
           function gtag(){dataLayer.push(arguments);}
           window.gtag = gtag;
           gtag('js', new Date());
-          gtag('config', '${GA_MEASUREMENT_ID}');
+          gtag('config', '${GA_MEASUREMENT_ID}'${gaConfig});
         `}
       </Script>
     </>

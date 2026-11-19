@@ -1,7 +1,7 @@
 "use client";
 
 import * as amplitude from "@amplitude/analytics-browser";
-import { IS_PRODUCTION_DEPLOYMENT } from "@/lib/site";
+import { ANALYTICS_ENABLED } from "@/lib/site";
 
 const AMPLITUDE_API_KEY = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
 
@@ -17,9 +17,9 @@ function safely(operation: string, fn: () => void) {
 }
 
 // Runs on the production deployment only, so local and preview visits stay out
-// of the data.
+// of the data. NEXT_PUBLIC_ANALYTICS_LOCAL=true turns it on for a local test.
 export function initAmplitude() {
-  if (initialized || !AMPLITUDE_API_KEY || !IS_PRODUCTION_DEPLOYMENT) return;
+  if (initialized || !AMPLITUDE_API_KEY || !ANALYTICS_ENABLED) return;
 
   safely("init", () => {
     amplitude.init(AMPLITUDE_API_KEY, {

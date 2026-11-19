@@ -96,25 +96,25 @@ export const content = {
     heading: "Inside the app",
     screens: [
       {
-        src: "/screens/garden.png",
+        src: "/app-screens/garden.png",
         title: "Your garden",
         body: "Your weeds, their balances and your progress, on one screen.",
         alt: "The Tend home screen. Pippy is content. Three weeds show a credit card, a student loan and a car loan.",
       },
       {
-        src: "/screens/widget.png",
+        src: "/app-screens/widget.png",
         title: "Home screen widget",
         body: "Pippy's mood and your progress, right on your phone's home screen.",
         alt: "A phone home screen with a Tend notification and two Tend widgets that show Pippy and progress.",
       },
       {
-        src: "/screens/calendar.png",
+        src: "/app-screens/calendar.png",
         title: "Pippy's month",
         body: "Pippy's mood for each day, with on-time payments and extra payments.",
         alt: "A month calendar with Pippy's mood on each day, and totals for the month.",
       },
       {
-        src: "/screens/check-in.png",
+        src: "/app-screens/check-in.png",
         title: "Check-in",
         body: "One question, with answers that never judge.",
         alt: "A check-in that asks whether a Visa payment got paid. One answer is “It's a tight month”.",

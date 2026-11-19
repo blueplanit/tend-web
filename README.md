@@ -23,7 +23,7 @@ npm run lint
 | `lib/analytics/` | Amplitude, GA4 and UTM pass-through to Google Play |
 | `components/structured-data.tsx` | JSON-LD for search engines and AI assistants |
 | `app/robots.ts`, `app/sitemap.ts`, `app/opengraph-image.tsx` | SEO files |
-| `public/pippy/`, `public/screens/` | Brand kit assets |
+| `public/pippy/`, `public/app-screens/` | Brand kit assets. Give a changed image a new path, so no cache serves the old one. |
 | `app/fonts/` | Fredoka and Nunito, stored so a build needs no network |
 
 ## Environment variables
@@ -35,6 +35,7 @@ Set these in Vercel. Each one is optional. A missing key turns its feature off.
 | `NEXT_PUBLIC_AMPLITUDE_API_KEY` | Amplitude project key |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | GA4 measurement ID, `G-…` |
 | `NEXT_PUBLIC_SITE_URL` | The final domain. The default is the Vercel URL. |
+| `NEXT_PUBLIC_ANALYTICS_LOCAL` | `true` turns analytics on locally, for a test. Set it in `.env.local` only, never in Vercel. GA4 then runs in debug mode. |
 
 Analytics and indexing run on the production deployment only. The site reads `VERCEL_ENV` and `NEXT_PUBLIC_VERCEL_ENV` to know this. Keep "Automatically expose System Environment Variables" on in Vercel.
 
