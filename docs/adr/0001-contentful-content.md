@@ -28,6 +28,8 @@ Migration files in `contentful/migrations/` define each content type. The model 
 
 The webhook checks a published landing JSON against the schema. If the JSON fails, the webhook answers 422 and expires nothing. The site keeps the last good copy.
 
+The webhook also checks the version that the Delivery API serves. A later invalid publish can overtake a valid one while the webhook waits. The webhook then answers 409 and expires nothing.
+
 There is no preview. The webhook activity log in Contentful is the only place an editor sees a rejection.
 
 ### 4. Only a publish changes the site
@@ -47,8 +49,12 @@ Legal text is no longer in git. Contentful's version history records each change
 
 - This repo uses `"use cache"`, `cacheTag` and `cacheLife`, not `unstable_cache`. `cacheComponents` is on for the whole app.
 - The backstop window is the `contentful` cache profile in `next.config.ts`: revalidate after 7 days. **This is not a bug.** It only matters when a webhook fails.
-- The webhook waits up to 8 seconds, not 15, for the Delivery API to serve the change. It answers 503 on a timeout, and Contentful retries.
+- The webhook waits up to 8 seconds, not 15, for the Delivery API to serve the change. Each request gets the time left before that deadline. A timeout gets 503, and Contentful retries.
+- The webhook calls `revalidateTag(tag, { expire: 0 })`, not `"max"`. With `"max"`, the first visit after a publish gets the old page. The webhook has already confirmed the new version, so no visitor needs the old page.
 - Reads use `fetch`, not the Contentful SDK.
+- **The default landing copy is cached, for minutes.** ADR-0003 decision 7 says a failure is never cached. Here the page output caches whatever the reader returns, so the default copy is cached too. A short `cacheLife("minutes")` makes the site read Contentful again within about a minute.
+- **One cache tag per entry.** ADR-0003 decision 1 adds a tag per content type. Each page here reads one known entry, and no page lists entries, so a type tag expires nothing extra. The blog adds a type tag when it adds a listing.
+- **No expiry by path.** ADR-0003 decision 2 also expires each rendered route by path, for metadata routes such as the sitemap. No metadata route here reads Contentful, so the tag reaches every page that uses the entry.
 
 ## Consequences
 

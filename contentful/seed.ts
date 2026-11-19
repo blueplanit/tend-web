@@ -21,13 +21,21 @@ const HEADERS = {
 const localized = (fields: Record<string, unknown>) =>
   Object.fromEntries(Object.entries(fields).map(([key, value]) => [key, { "en-US": value }]));
 
-async function seedEntry(id: string, contentType: string, fields: Record<string, unknown>) {
-  const existing = await fetch(`${BASE}/${id}`, { headers: HEADERS });
-  if (existing.ok) {
+// Creates the entry with the key field's value as its ID. It skips the entry when
+// any entry of the content type already has that key, whatever its ID.
+async function seedEntry(contentType: string, keyField: string, fields: Record<string, unknown>) {
+  const id = String(fields[keyField]);
+  const query = new URLSearchParams({
+    content_type: contentType,
+    [`fields.${keyField}`]: id,
+    limit: "1",
+  });
+  const existing = await fetch(`${BASE}?${query}`, { headers: HEADERS });
+  if (!existing.ok) throw new Error(`${id}: read failed, HTTP ${existing.status}`);
+  if (((await existing.json()) as { total: number }).total > 0) {
     console.log(`${id}: exists, skipped.`);
     return;
   }
-  if (existing.status !== 404) throw new Error(`${id}: read failed, HTTP ${existing.status}`);
 
   const created = await fetch(`${BASE}/${id}`, {
     method: "PUT",
@@ -46,7 +54,7 @@ async function seedEntry(id: string, contentType: string, fields: Record<string,
 }
 
 async function main() {
-  await seedEntry("landing", "pageCopy", { pageKey: "landing", copy: DEFAULT_LANDING_COPY });
+  await seedEntry("pageCopy", "pageKey", { pageKey: "landing", copy: DEFAULT_LANDING_COPY });
 }
 
 main().catch((error) => {

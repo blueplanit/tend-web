@@ -32,14 +32,19 @@ npm run lint
 
 ## Environment variables
 
-Set these in Vercel. The analytics keys are optional: a missing key turns its feature off. The Contentful keys are required: without them the landing page shows the default copy, and the legal pages fail.
+Contentful:
+
+| Variable | Where | Use | When it is missing |
+|---|---|---|---|
+| `CONTENTFUL_SPACE_ID` | Vercel Production and Preview, `.env.local` | The TendApp space ID | The landing page shows the default copy. The legal pages fail the build. |
+| `CONTENTFUL_DELIVERY_TOKEN` | Vercel Production and Preview, `.env.local` | Delivery API token, from Settings → API keys | The same as `CONTENTFUL_SPACE_ID` |
+| `CONTENTFUL_REVALIDATE_SECRET` | Vercel Production, `.env.local` | The webhook sends it in the `x-revalidate-secret` header. | The webhook answers 401. A publish reaches the site only after the 7-day backstop. |
+| `CONTENTFUL_MANAGEMENT_TOKEN` | `.env.local` only. Never in Vercel. | Personal management token for the `contentful:*` scripts | The scripts stop. The site is not affected. |
+
+Analytics and site URL, in Vercel. Each one is optional. A missing key turns its feature off.
 
 | Variable | Use |
 |---|---|
-| `CONTENTFUL_SPACE_ID` | The TendApp space ID |
-| `CONTENTFUL_DELIVERY_TOKEN` | Content Delivery API token, from Settings → API keys |
-| `CONTENTFUL_REVALIDATE_SECRET` | Shared secret. The webhook sends it in the `x-revalidate-secret` header. |
-| `CONTENTFUL_MANAGEMENT_TOKEN` | Personal CMA token for the `contentful:*` scripts. Set it in `.env.local` only, never in Vercel. |
 | `NEXT_PUBLIC_AMPLITUDE_API_KEY` | Amplitude project key |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | GA4 measurement ID, `G-…` |
 | `NEXT_PUBLIC_SITE_URL` | The final domain. The default is the Vercel URL. |
@@ -62,9 +67,9 @@ Paste the link into `BETA_LINKS` in `lib/site.ts`. The button then links to the 
 
 ## Edit copy
 
-Edit the entry in Contentful and publish it. The webhook expires that page's cache, and the next visit shows the change. There is no preview, so check the JSON before you publish.
+Edit the entry in Contentful and publish it. The webhook expires that page's cache at once. The next visit rebuilds the page with the new copy. There is no preview. Check the JSON before you publish.
 
-- **Landing page:** the `landing` entry of the Page copy type. Keep the keys and the shape. The webhook rejects JSON that fails the schema in `lib/landing-copy.ts`, and the site keeps the last good copy. Contentful shows the rejection under Settings → Webhooks → Activity log.
+- **Landing page:** the `landing` entry of the Page copy type. Keep the keys and the shape. The webhook rejects JSON that fails the schema in `lib/landing-copy.ts`. The site then keeps the last good copy. Contentful shows the rejection under Settings → Webhooks → Activity log: 422 for an invalid publish, 409 when a later invalid publish overtook a valid one.
 - **Privacy policy and terms of use:** the Legal document entries. Change "Last updated" for a real policy change only, not for a typo fix.
 
 A new page section or a new field needs a code change and a deploy.

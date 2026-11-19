@@ -23,14 +23,15 @@ const components: Components = {
   ol: ({ children }) => <ol className="mt-3 list-decimal space-y-2 pl-6">{children}</ol>,
   strong: ({ children }) => <strong className="font-bold text-ink">{children}</strong>,
   a: ({ href = "", children }) => {
-    if (href.startsWith("/")) {
+    // "//host/path" is a protocol-relative link to another site, not a site path.
+    const external = href.startsWith("http") || href.startsWith("//");
+    if (href.startsWith("/") && !external) {
       return (
         <Link href={href} className={linkClass}>
           {children}
         </Link>
       );
     }
-    const external = href.startsWith("http");
     return (
       <a
         href={href}

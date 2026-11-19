@@ -40,7 +40,7 @@ function config() {
   return { spaceId, token };
 }
 
-async function cdaGet(path: string, params: Record<string, string> = {}) {
+async function cdaGet(path: string, params: Record<string, string> = {}, signal?: AbortSignal) {
   const { spaceId, token } = config();
   const url = new URL(
     `https://cdn.contentful.com/spaces/${spaceId}/environments/master${path}`,
@@ -48,7 +48,7 @@ async function cdaGet(path: string, params: Record<string, string> = {}) {
   url.searchParams.set("locale", LOCALE);
   for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
 
-  return fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  return fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal });
 }
 
 function toEntry(item: CdaEntry): DeliveredEntry {
@@ -74,8 +74,12 @@ export async function findEntry(
 }
 
 // Returns the published entry, or null when the Delivery API does not serve it.
-export async function getEntry(entryId: string): Promise<DeliveredEntry | null> {
-  const response = await cdaGet(`/entries/${encodeURIComponent(entryId)}`);
+// The signal aborts both the request and the body read.
+export async function getEntry(
+  entryId: string,
+  signal?: AbortSignal,
+): Promise<DeliveredEntry | null> {
+  const response = await cdaGet(`/entries/${encodeURIComponent(entryId)}`, {}, signal);
   if (response.status === 404) return null;
   if (!response.ok) {
     throw new Error(`Contentful entry ${entryId} read failed: HTTP ${response.status}`);
