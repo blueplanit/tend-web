@@ -11,6 +11,11 @@ const pippy = await readFile(
   "base64",
 );
 
+// ImageResponse cannot read the variable brand fonts in app/fonts, so it
+// loads static instances of the weights the site uses.
+const fredokaSemiBold = await readFile(join(process.cwd(), "app/fonts/Fredoka-SemiBold.ttf"));
+const nunitoBold = await readFile(join(process.cwd(), "app/fonts/Nunito-Bold.ttf"));
+
 export default function OpengraphImage() {
   return new ImageResponse(
     (
@@ -24,20 +29,37 @@ export default function OpengraphImage() {
           padding: "0 90px",
           background: "linear-gradient(180deg, #DDEBF3 0%, #DDEBF3 62%, #CFE3CC 62%, #CFE3CC 100%)",
           color: "#26332E",
+          fontFamily: "Nunito",
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", maxWidth: 620 }}>
-          <div style={{ fontSize: 96, fontWeight: 700, color: "#3E6B52" }}>Tend</div>
-          <div style={{ fontSize: 44, fontWeight: 700, lineHeight: 1.2, marginTop: 12 }}>
+          <div style={{ fontFamily: "Fredoka", fontSize: 96, fontWeight: 600, color: "#3E6B52" }}>
+            Tend
+          </div>
+          <div
+            style={{
+              fontFamily: "Fredoka",
+              fontSize: 44,
+              fontWeight: 600,
+              lineHeight: 1.2,
+              marginTop: 12,
+            }}
+          >
             A calmer way to pay down debt, with Pippy.
           </div>
-          <div style={{ fontSize: 30, marginTop: 24, color: "#5E6B66" }}>
+          <div style={{ fontSize: 30, fontWeight: 700, marginTop: 24, color: "#5E6B66" }}>
             Beta coming soon on Android and iPhone
           </div>
         </div>
         <img src={`data:image/png;base64,${pippy}`} width={400} height={400} alt="" />
       </div>
     ),
-    size,
+    {
+      ...size,
+      fonts: [
+        { name: "Fredoka", data: fredokaSemiBold, weight: 600, style: "normal" },
+        { name: "Nunito", data: nunitoBold, weight: 700, style: "normal" },
+      ],
+    },
   );
 }
