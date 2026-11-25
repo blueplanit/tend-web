@@ -1,40 +1,24 @@
 import type { BetaPlatform } from "@/lib/site";
+import { UNKNOWN, touchTags, type Attribution } from "./attribution";
 
-const UTM_KEYS = [
-  "utm_source",
-  "utm_medium",
-  "utm_campaign",
-  "utm_term",
-  "utm_content",
-] as const;
-
-export function readUtmParams(search: string): Record<string, string> {
-  const params = new URLSearchParams(search);
-  const utm: Record<string, string> = {};
-  for (const key of UTM_KEYS) {
-    const value = params.get(key);
-    if (value) utm[key] = value;
-  }
-  return utm;
-}
-
-// Passes the visit's UTM parameters on to Google Play as the install referrer.
-// The app can then read them and tie an install to its Campaign.
+// Passes the latest known source on to Google Play as the install referrer.
+// The app can then read it and tie an install to its source and Campaign.
 // TestFlight takes no referrer, so an iOS link stays as it is.
 // Check that the Play open test link keeps the referrer before you rely on it.
 export function withStoreAttribution(
   url: string,
   platform: BetaPlatform,
-  search: string,
+  attribution: Attribution | null,
 ): string {
-  if (platform !== "android") return url;
+  const latest = attribution?.latest;
+  if (platform !== "android" || !latest || latest.medium === UNKNOWN) return url;
 
-  const utm = readUtmParams(search);
-  if (Object.keys(utm).length === 0) return url;
+  const tags: Record<string, string> = {};
+  for (const [key, value] of Object.entries(touchTags(latest))) tags[`utm_${key}`] = value;
 
   try {
     const target = new URL(url);
-    target.searchParams.set("referrer", new URLSearchParams(utm).toString());
+    target.searchParams.set("referrer", new URLSearchParams(tags).toString());
     return target.toString();
   } catch {
     return url;
