@@ -1,30 +1,20 @@
 import {
   attributionParams,
   captureAttribution,
-  readSavedAttribution,
+  parseAttribution,
   type Attribution,
 } from "./attribution";
+import { safely } from "./safely";
 
 // Saved in localStorage, so the source survives page loads and later returns.
-// It holds only source values and page paths, never personal information.
+// It holds only source values, page paths and click ID hashes, never personal information.
 const STORAGE_KEY = "tend.attribution.v1";
 
 let current: Attribution | null = null;
 
-function storage(): Storage | null {
-  try {
-    return window.localStorage;
-  } catch {
-    return null; // Storage is off, such as in some private windows.
-  }
-}
-
-function readSaved() {
-  try {
-    return storage()?.getItem(STORAGE_KEY) ?? null;
-  } catch {
-    return null;
-  }
+// Storage can be off, such as in some private windows. Then the source lasts one page load.
+function readSaved(): string | null {
+  return safely("Attribution read", () => window.localStorage.getItem(STORAGE_KEY)) ?? null;
 }
 
 function navigationType() {
@@ -41,13 +31,11 @@ export function capturePageLoad() {
   );
   current = attribution;
   if (!changed) return;
-  try {
-    storage()?.setItem(STORAGE_KEY, JSON.stringify(attribution));
-  } catch {}
+  safely("Attribution save", () => window.localStorage.setItem(STORAGE_KEY, JSON.stringify(attribution)));
 }
 
 export function getAttribution(): Attribution | null {
-  current ??= readSavedAttribution(readSaved());
+  current ??= parseAttribution(readSaved());
   return current;
 }
 

@@ -28,16 +28,16 @@ describe("a first visit", () => {
     expect(visits({ path: "/" }).fields).toEqual({
       first_source: "unknown",
       first_medium: "unknown",
-      first_acquisition: "unknown",
+      first_paid_status: "unknown",
       first_landing_page: "/",
       latest_source: "unknown",
       latest_medium: "unknown",
-      latest_acquisition: "unknown",
+      latest_paid_status: "unknown",
       latest_landing_page: "/",
     });
   });
 
-  it("records reviewed URL tags as a paid acquisition", () => {
+  it("records reviewed URL tags with paid status paid", () => {
     const { fields } = visits({
       path: "/?utm_source=reddit&utm_medium=paid-social&utm_campaign=pa002&utm_content=pa002-comic",
     });
@@ -46,9 +46,9 @@ describe("a first visit", () => {
       first_medium: "paid-social",
       first_campaign: "pa002",
       first_content: "pa002-comic",
-      first_acquisition: "paid",
+      first_paid_status: "paid",
       latest_source: "reddit",
-      latest_acquisition: "paid",
+      latest_paid_status: "paid",
     });
   });
 
@@ -61,7 +61,7 @@ describe("a first visit", () => {
       first_medium: "unlisted",
       first_campaign: "unlisted",
       first_content: "unlisted",
-      first_acquisition: "unknown",
+      first_paid_status: "unknown",
     });
   });
 
@@ -81,7 +81,7 @@ describe("a first visit", () => {
 
   it("records a hand-tagged organic medium as unlisted, because only the referrer sets it", () => {
     const { fields } = visits({ path: "/?utm_source=google&utm_medium=organic" });
-    expect(fields).toMatchObject({ first_medium: "unlisted", first_acquisition: "unknown" });
+    expect(fields).toMatchObject({ first_medium: "unlisted", first_paid_status: "unknown" });
   });
 
   it("accepts any domain as the source of a tagged referral", () => {
@@ -89,8 +89,14 @@ describe("a first visit", () => {
     expect(fields).toMatchObject({
       first_source: "example.com",
       first_medium: "referral",
-      first_acquisition: "unpaid",
+      first_paid_status: "unpaid",
     });
+  });
+
+  it("records only the main domain of a tagged referral, because a subdomain can name a person", () => {
+    const { fields } = visits({ path: "/?utm_source=jo-smith.substack.com&utm_medium=referral" });
+    expect(fields).toMatchObject({ first_source: "substack.com", first_medium: "referral" });
+    expect(JSON.stringify(fields)).not.toContain("jo-smith");
   });
 });
 
@@ -106,6 +112,7 @@ describe("an untagged visit", () => {
     ["https://search.yahoo.com/", "yahoo", "organic", "unpaid"],
     ["https://uk.search.yahoo.com/", "yahoo", "organic", "unpaid"],
     ["https://r.search.yahoo.com/", "yahoo", "organic", "unpaid"],
+    ["https://search.yahoo.co.jp/", "yahoo", "organic", "unpaid"],
     ["https://gemini.google.com/", "gemini", "ai-answer", "unpaid"],
     ["https://chatgpt.com/", "chatgpt", "ai-answer", "unpaid"],
     ["https://www.perplexity.ai/", "perplexity", "ai-answer", "unpaid"],
@@ -122,12 +129,15 @@ describe("an untagged visit", () => {
     ["android-app://com.openai.chatgpt/", "chatgpt", "ai-answer", "unpaid"],
     ["android-app://com.google.android.gm/", "gmail", "email", "unknown"],
     ["https://mail.google.com/", "gmail", "email", "unknown"],
-  ])("from %s records %s / %s as %s", (referrer, source, medium, acquisition) => {
+    // Another Android app: the package name read backwards is its domain.
+    ["android-app://com.facebook.katana/", "facebook.com", "referral", "unknown"],
+    ["android-app://org.telegram.messenger/", "telegram.org", "referral", "unknown"],
+  ])("from %s records %s / %s as %s", (referrer, source, medium, paidStatus) => {
     const { fields } = visits({ path: "/", referrer });
     expect(fields).toMatchObject({
       first_source: source,
       first_medium: medium,
-      first_acquisition: acquisition,
+      first_paid_status: paidStatus,
     });
   });
 
@@ -137,12 +147,13 @@ describe("an untagged visit", () => {
     ["wbraid", "", "google", "cpc"],
     ["ttclid", "https://www.tiktok.com/", "tiktok", "paid-social"],
     ["rdt_cid", "https://www.reddit.com/", "reddit", "paid-social"],
+    ["msclkid", "https://www.bing.com/", "bing", "cpc"],
   ])("with the ad click id %s and the referrer '%s' records %s / %s as paid", (key, referrer, source, medium) => {
     const { fields } = visits({ path: `/?${key}=abc123`, referrer });
     expect(fields).toMatchObject({
       first_source: source,
       first_medium: medium,
-      first_acquisition: "paid",
+      first_paid_status: "paid",
     });
     expect(JSON.stringify(fields)).not.toContain("abc123");
   });
@@ -156,8 +167,13 @@ describe("an untagged visit", () => {
       first_medium: "cpc",
       first_campaign: "pa002",
       first_content: "pa002-comic",
-      first_acquisition: "paid",
+      first_paid_status: "paid",
     });
+  });
+
+  it("keeps the Campaign Code when a click id overrides an unpaid tagged medium", () => {
+    const { fields } = visits({ path: "/?utm_source=google&utm_medium=social&utm_campaign=pa002&gclid=abc123" });
+    expect(fields).toMatchObject({ first_medium: "cpc", first_campaign: "pa002", first_paid_status: "paid" });
   });
 
   // A subdomain can name a person, so an untagged referral records only the main domain.
@@ -179,7 +195,7 @@ describe("an untagged visit", () => {
     expect(fields).toMatchObject({
       first_source: "instagram",
       first_medium: "social",
-      first_acquisition: "unknown",
+      first_paid_status: "unknown",
     });
   });
 
@@ -265,7 +281,7 @@ describe("later page loads", () => {
     expect(changed).toBe(false);
   });
 
-  it("count the same source again as one acquisition", () => {
+  it("count the same source again as one touch", () => {
     const { fields, changed } = visits(fromTikTok, { ...fromTikTok, path: fromTikTok.path });
     expect(fields).toMatchObject(tikTokFields);
     expect(changed).toBe(false);
@@ -286,7 +302,7 @@ describe("later page loads", () => {
     expect(fields).not.toHaveProperty("latest_content");
   });
 
-  it("do not count an old acquisition again when its tagged URL is reopened", () => {
+  it("do not count an old touch again when its tagged URL is reopened", () => {
     const fromRedditAd = { path: "/?utm_source=reddit&utm_medium=paid-social&utm_campaign=pa002" };
     const { fields, changed } = visits(
       fromRedditAd,
@@ -300,6 +316,38 @@ describe("later page loads", () => {
       latest_medium: "organic",
     });
     expect(changed).toBe(false);
+  });
+
+  it("count a new ad click again, because a new click id proves a new click", () => {
+    const { fields } = visits(
+      { path: "/?gclid=AAA&utm_campaign=pa002" },
+      { path: "/", referrer: "https://www.reddit.com/" },
+      { path: "/blog/x?gclid=BBB&utm_campaign=pa002" },
+    );
+    expect(fields).toMatchObject({
+      latest_source: "google",
+      latest_medium: "cpc",
+      latest_campaign: "pa002",
+      latest_landing_page: "/blog/x",
+    });
+  });
+
+  it("do not count a reopened ad URL again, because its click id is the same", () => {
+    const fromAd = { path: "/?gclid=AAA&utm_campaign=pa002" };
+    const { fields, changed } = visits(fromAd, { path: "/", referrer: "https://www.reddit.com/" }, fromAd);
+    expect(fields).toMatchObject({ latest_source: "reddit" });
+    expect(changed).toBe(false);
+  });
+
+  it("treat the www host and the bare host as the same site", () => {
+    let saved: string | null = null;
+    for (const [href, referrer] of [
+      ["https://tend.example/?utm_source=reddit&utm_medium=social", ""],
+      ["https://www.tend.example/blog/x", "https://tend.example/"],
+    ]) {
+      saved = JSON.stringify(captureAttribution({ href, referrer }, saved).attribution);
+    }
+    expect(attributionParams(JSON.parse(saved!))).toMatchObject({ latest_source: "reddit" });
   });
 
   it("let an earlier untagged source become the latest source again", () => {

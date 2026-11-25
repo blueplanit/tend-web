@@ -1,5 +1,5 @@
 import type { BetaPlatform } from "@/lib/site";
-import { UNKNOWN, type Attribution } from "./attribution";
+import { UNKNOWN, touchTags, type Attribution } from "./attribution";
 
 // Passes the latest known source on to Google Play as the install referrer.
 // The app can then read it and tie an install to its source and Campaign.
@@ -13,12 +13,8 @@ export function withStoreAttribution(
   const latest = attribution?.latest;
   if (platform !== "android" || !latest || latest.medium === UNKNOWN) return url;
 
-  const tags: Record<string, string> = {
-    utm_source: latest.source,
-    utm_medium: latest.medium,
-  };
-  if (latest.campaign) tags.utm_campaign = latest.campaign;
-  if (latest.content) tags.utm_content = latest.content;
+  const tags: Record<string, string> = {};
+  for (const [key, value] of Object.entries(touchTags(latest))) tags[`utm_${key}`] = value;
 
   try {
     const target = new URL(url);

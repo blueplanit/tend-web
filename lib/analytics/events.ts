@@ -1,13 +1,7 @@
 "use client";
 
 import { trackAmplitude } from "./amplitude";
-
-declare global {
-  interface Window {
-    dataLayer?: unknown[];
-    gtag?: (...args: unknown[]) => void;
-  }
-}
+import { safely } from "./safely";
 
 // One event, two names: Amplitude uses Title Case, GA4 uses snake_case.
 // Each tool adds the attribution fields to every event. See ./attribution.ts.
@@ -34,9 +28,5 @@ export function trackEvent(
 ) {
   const withPage = { ...properties, current_page: window.location.pathname };
   trackAmplitude(event.amplitude, withPage);
-  try {
-    window.gtag?.("event", event.ga, withPage);
-  } catch (error) {
-    console.error(`GA4 track ${event.ga} failed`, error);
-  }
+  safely(`GA4 track ${event.ga}`, () => window.gtag?.("event", event.ga, withPage));
 }

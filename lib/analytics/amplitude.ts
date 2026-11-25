@@ -3,18 +3,21 @@
 import * as amplitude from "@amplitude/analytics-browser";
 import { ANALYTICS_ENABLED } from "@/lib/site";
 import { getAttributionParams } from "./attribution-store";
-import { pageUrlWithoutQuery } from "./page-url";
+import { urlWithoutQueryOrFragment } from "./page-url";
+import { safely as safelyRun } from "./safely";
 
-const PAGE_LOCATION = "[Amplitude] Page Location";
+// Amplitude's page views record the full address bar in these fields.
+// Page Location keeps the query, and Page URL keeps the fragment.
+const PAGE_URL_KEYS = ["[Amplitude] Page Location", "[Amplitude] Page URL"];
 
 const AMPLITUDE_API_KEY = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
 
 let initialized = false;
 
 // Amplitude's page view plugin adds these campaign values to each page view, even
-// with attribution capture off. They hold raw tags, click ids and the full referrer
-// URL, which can carry personal information. ./attribution.ts is the one definition.
-// The list matches BASE_CAMPAIGN in @amplitude/analytics-core. Check it after an upgrade.
+// with attribution capture off. They hold raw tags, click IDs and the full referrer
+// URL, which can carry personal information. Our attribution fields replace them.
+// The list copies BASE_CAMPAIGN in @amplitude/analytics-core. Check it after an upgrade.
 const AMPLITUDE_CAMPAIGN_KEYS = [
   "utm_campaign",
   "utm_content",
@@ -37,13 +40,8 @@ const AMPLITUDE_CAMPAIGN_KEYS = [
   "wbraid",
 ];
 
-// Analytics must never break the page it measures.
-function safely(operation: string, fn: () => void) {
-  try {
-    fn();
-  } catch (error) {
-    console.error(`Amplitude ${operation} failed`, error);
-  }
+function safely(operation: string, fn: () => unknown) {
+  safelyRun(`Amplitude ${operation}`, fn);
 }
 
 // Runs on the production deployment only, so local and preview visits stay out
@@ -61,9 +59,10 @@ export function initAmplitude() {
         if (event.event_type.startsWith("$")) return event; // identify and group calls
         const properties: Record<string, unknown> = { ...event.event_properties };
         for (const key of AMPLITUDE_CAMPAIGN_KEYS) delete properties[key];
-        // Page views record the full address bar, query included.
-        const location = properties[PAGE_LOCATION];
-        if (typeof location === "string") properties[PAGE_LOCATION] = pageUrlWithoutQuery(location);
+        for (const key of PAGE_URL_KEYS) {
+          const value = properties[key];
+          if (typeof value === "string") properties[key] = urlWithoutQueryOrFragment(value);
+        }
         event.event_properties = { ...getAttributionParams(), ...properties };
         return event;
       },
