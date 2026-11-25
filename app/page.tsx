@@ -19,6 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
     copy: { meta },
   } = await getLandingCopy();
   return {
+    description: meta.description,
     alternates: { canonical: "/" },
     openGraph: openGraphFor({ url: "/", title: meta.title, description: meta.description }),
   };
