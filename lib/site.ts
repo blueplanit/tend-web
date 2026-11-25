@@ -11,8 +11,12 @@ export type BetaPlatform = "android" | "ios";
 
 // null shows "Coming soon". Paste each beta install link here when it exists.
 // The links: tend-marketing/listings/README.md.
+// Android: set NEXT_PUBLIC_ANDROID_STORE_URL in Vercel, then redeploy. Use the store
+// listing, https://play.google.com/store/apps/details?id=com.blueplanit.tend.
+// Only the store listing keeps the install referrer. The open test join page drops it.
+// A tester joins the open test once, then installs from the store listing.
 export const BETA_LINKS: Record<BetaPlatform, string | null> = {
-  android: null, // Google Play open test link
+  android: process.env.NEXT_PUBLIC_ANDROID_STORE_URL || null,
   ios: null, // TestFlight public link
 };
 
