@@ -65,6 +65,11 @@ describe("a first visit", () => {
     });
   });
 
+  it("records a tag in the wrong case or with spaces as unlisted, so it can be fixed", () => {
+    const { fields } = visits({ path: "/?utm_source=Reddit&utm_medium=%20social" });
+    expect(fields).toMatchObject({ first_source: "unlisted", first_medium: "unlisted" });
+  });
+
   it("accepts any domain as the source of a tagged referral", () => {
     const { fields } = visits({ path: "/?utm_source=example.com&utm_medium=referral" });
     expect(fields).toMatchObject({
@@ -76,39 +81,61 @@ describe("a first visit", () => {
 });
 
 describe("an untagged visit", () => {
+  // Search and AI answers have no paid version without a click id, so they count as unpaid.
+  // A social site or another website can host a paid post, so the referrer alone proves nothing.
   it.each([
-    ["https://www.google.com/", "google", "organic"],
-    ["https://www.google.co.uk/", "google", "organic"],
-    ["https://www.bing.com/search?q=debt", "bing", "organic"],
-    ["https://duckduckgo.com/", "duckduckgo", "organic"],
-    ["https://gemini.google.com/", "gemini", "ai-answer"],
-    ["https://chatgpt.com/", "chatgpt", "ai-answer"],
-    ["https://www.perplexity.ai/", "perplexity", "ai-answer"],
-    ["https://out.reddit.com/", "reddit", "social"],
-    ["https://l.instagram.com/", "instagram", "social"],
-    ["https://m.youtube.com/", "youtube", "social"],
-    ["https://www.someblog.com/post/123?ref=abc", "someblog.com", "referral"],
-  ])("from %s records %s / %s as unpaid", (referrer, source, medium) => {
+    ["https://www.google.com/", "google", "organic", "unpaid"],
+    ["https://www.google.co.uk/", "google", "organic", "unpaid"],
+    ["android-app://com.google.android.googlequicksearchbox/", "google", "organic", "unpaid"],
+    ["https://www.bing.com/search?q=debt", "bing", "organic", "unpaid"],
+    ["https://duckduckgo.com/", "duckduckgo", "organic", "unpaid"],
+    ["https://search.yahoo.com/", "yahoo", "organic", "unpaid"],
+    ["https://uk.search.yahoo.com/", "yahoo", "organic", "unpaid"],
+    ["https://r.search.yahoo.com/", "yahoo", "organic", "unpaid"],
+    ["https://gemini.google.com/", "gemini", "ai-answer", "unpaid"],
+    ["https://chatgpt.com/", "chatgpt", "ai-answer", "unpaid"],
+    ["https://www.perplexity.ai/", "perplexity", "ai-answer", "unpaid"],
+    ["https://out.reddit.com/", "reddit", "social", "unknown"],
+    ["https://l.instagram.com/", "instagram", "social", "unknown"],
+    ["https://m.youtube.com/", "youtube", "social", "unknown"],
+    ["https://www.someblog.com/post/123?ref=abc", "someblog.com", "referral", "unknown"],
+  ])("from %s records %s / %s as %s", (referrer, source, medium, acquisition) => {
     const { fields } = visits({ path: "/", referrer });
     expect(fields).toMatchObject({
       first_source: source,
       first_medium: medium,
-      first_acquisition: "unpaid",
+      first_acquisition: acquisition,
+    });
+  });
+
+  it.each([
+    ["gclid", "https://www.google.com/", "google", "cpc"],
+    ["gbraid", "https://www.google.com/", "google", "cpc"],
+    ["wbraid", "", "google", "cpc"],
+    ["ttclid", "https://www.tiktok.com/", "tiktok", "paid-social"],
+    ["rdt_cid", "https://www.reddit.com/", "reddit", "paid-social"],
+  ])("with the ad click id %s and the referrer '%s' records %s / %s as paid", (key, referrer, source, medium) => {
+    const { fields } = visits({ path: `/?${key}=abc123`, referrer });
+    expect(fields).toMatchObject({
+      first_source: source,
+      first_medium: medium,
+      first_acquisition: "paid",
+    });
+    expect(JSON.stringify(fields)).not.toContain("abc123");
+  });
+
+  it("does not count Instagram's fbclid as proof of a paid ad", () => {
+    const { fields } = visits({ path: "/?fbclid=abc123", referrer: "https://l.instagram.com/" });
+    expect(fields).toMatchObject({
+      first_source: "instagram",
+      first_medium: "social",
+      first_acquisition: "unknown",
     });
   });
 
   it("records ChatGPT's own tag as an AI answer", () => {
     const { fields } = visits({ path: "/?utm_source=chatgpt.com" });
     expect(fields).toMatchObject({ first_source: "chatgpt", first_medium: "ai-answer" });
-  });
-
-  it("records a Google Ads click id as a paid Google ad", () => {
-    const { fields } = visits({ path: "/?gclid=abc123", referrer: "https://www.google.com/" });
-    expect(fields).toMatchObject({
-      first_source: "google",
-      first_medium: "cpc",
-      first_acquisition: "paid",
-    });
   });
 
   it("lets URL tags win over the referrer", () => {
@@ -207,6 +234,31 @@ describe("later page loads", () => {
       latest_landing_page: "/blog/interest",
     });
     expect(fields).not.toHaveProperty("latest_content");
+  });
+
+  it("replace an unlisted tag with the first known source", () => {
+    const { fields } = visits(
+      { path: "/?utm_source=Facebook" },
+      { path: "/?utm_source=reddit&utm_medium=social" },
+    );
+    expect(fields).toMatchObject({
+      first_source: "reddit",
+      first_medium: "social",
+      latest_source: "reddit",
+    });
+  });
+
+  it("let an unlisted tag fill an unknown view, but never replace a known source", () => {
+    const fromUnknownToUnlisted = visits({ path: "/" }, { path: "/blog/interest?utm_source=Facebook" });
+    expect(fromUnknownToUnlisted.fields).toMatchObject({
+      first_source: "unlisted",
+      latest_source: "unlisted",
+      latest_landing_page: "/blog/interest",
+    });
+
+    const fromKnown = visits(fromTikTok, { path: "/blog/interest?utm_source=Facebook" });
+    expect(fromKnown.fields).toMatchObject(tikTokFields);
+    expect(fromKnown.changed).toBe(false);
   });
 
   it("replace an unknown first source with the first known source", () => {

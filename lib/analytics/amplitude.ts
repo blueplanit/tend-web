@@ -46,6 +46,20 @@ export function initAmplitude() {
     });
     initialized = true;
   });
+  if (!initialized) return;
+
+  // Amplitude sends queued events about once a second. A store link leaves the page
+  // at once, so store_click would wait until the visitor comes back. A beacon still
+  // sends after the page hides. Back on the page, the normal transport returns.
+  window.addEventListener("pagehide", () =>
+    safely("flush", () => {
+      amplitude.setTransport("beacon");
+      amplitude.flush();
+    }),
+  );
+  window.addEventListener("pageshow", () =>
+    safely("transport reset", () => amplitude.setTransport("fetch")),
+  );
 }
 
 export function trackAmplitude(
