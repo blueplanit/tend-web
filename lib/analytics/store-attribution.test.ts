@@ -63,7 +63,7 @@ describe("the Android store link", () => {
 });
 
 describe("the TestFlight link", () => {
-  it("stays as it is, because TestFlight takes no campaign fields", () => {
+  it("stays as it is, because TestFlight takes no App Store label", () => {
     const attribution = attributionFrom({
       href: "https://tend.example/?utm_source=reddit&utm_medium=social",
     });

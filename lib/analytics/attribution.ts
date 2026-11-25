@@ -389,7 +389,7 @@ export function prefixedTags(prefix: "utm" | "first" | "latest", touch: Signal):
 const APP_STORE_LABEL_MAX = 30;
 
 // The App Store label (ct) of a touch. docs/url-tags.md states the rules, in this order.
-// Apple hides a label with fewer than 5 downloads, so a label names a group, never one
+// Apple hides a label with fewer than 5 downloads. So a label names a group, never one
 // article or one site.
 export function appStoreLabel(touch: Signal): string {
   return labelFor(touch).slice(0, APP_STORE_LABEL_MAX);
@@ -400,13 +400,14 @@ function labelFor(touch: Signal): string {
   if (touch.paidStatus === "paid" && touch.campaign && CAMPAIGN_CODE.test(touch.campaign)) {
     return touch.campaign;
   }
-  // An unknown or unlisted medium: that value.
+  // An unknown or unlisted medium: that value. A touch with no source has medium unknown.
   if (!isMedium(touch.medium)) return touch.medium;
   // An unlisted source is a tag error. It must not join a real row.
   if (touch.source === UNLISTED) return UNLISTED;
   // A source on the fixed lists: medium-source, such as social-reddit.
   if (SOURCES.has(touch.source)) return `${touch.medium}-${touch.source}`;
-  // Any other source, such as a referring site: the medium only, such as referral.
+  // Only a referring site or app reaches here: the medium only, referral.
+  // readTags records any other source off the lists as unlisted.
   return touch.medium;
 }
 

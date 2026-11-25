@@ -78,14 +78,15 @@ An App Store link carries one App Store label in Apple's `ct` field. App Store C
 | Latest touch | App Store label | Example |
 |---|---|---|
 | `paid`, with a listed Campaign Code | The Campaign Code | `pa002` |
-| No source | `unknown` | `unknown` |
-| An unlisted medium or an unlisted source | `unlisted` | `unlisted` |
+| No tag, no click ID and no external referrer | `unknown` | `unknown` |
+| A tag with a medium or a source that is unlisted or missing | `unlisted` | `unlisted` |
 | A source in a fixed table above | `<medium>-<source>` | `social-reddit`, `organic-google`, `cpc-google` |
-| Any other source | The medium only | `referral`, `paid-article` |
+| A referring site or app off the fixed tables | `referral` | `referral` |
 
 - Apple hides a label with fewer than 5 downloads. So a label names a group, never one article or one site. `utm_content` never reaches Apple.
 - Every label is 30 characters or fewer. That is Apple's limit. The website cuts a longer label.
 - Without a Campaign Code, a paid-article publisher in the source table gets its own label, such as `paid-article-<publisher>`. Keep publisher names short.
+- A paid-article publisher off the source table records as `unlisted`. Add the publisher to the table before its link goes live.
 - [app-store-reporting.md](app-store-reporting.md) says how to read the App Store numbers.
 
 ## Values that the website records without a tag

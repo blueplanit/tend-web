@@ -70,6 +70,14 @@ _Avoid_: acquisition, attribution event
 The one label that an App Store link carries in Apple's `ct` field, such as `pa002` or `social-reddit`. It names the group of the latest touch. App Store Connect counts downloads by it. The rules are in [docs/url-tags.md](docs/url-tags.md).
 _Avoid_: campaign token, campaign name (a Campaign is paid only)
 
+**Provider token**:
+The fixed ID of our Apple developer account, in Apple's `pt` field. App Store Connect gives it. Every App Store link carries the same provider token.
+_Avoid_: pt, Apple token, account ID
+
+**Destination**:
+The store that a store button opens: `play_store`, `testflight` or `app_store`. Each `store_click` event carries it. The website reads it from the host of the link.
+_Avoid_: store type, target, platform (a platform is Android or iOS)
+
 ## Legal
 
 **Privacy policy**:
