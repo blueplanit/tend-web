@@ -77,7 +77,7 @@ Set the link in Vercel, then redeploy. The button then links to the store.
 | | Link | What the link carries |
 |---|---|---|
 | Android | The Google Play store listing, `https://play.google.com/store/apps/details?id=com.blueplanit.tend` | The first and latest touch, as the install `referrer` |
-| iOS beta | The TestFlight public link, `https://testflight.apple.com/join/…` | Nothing. TestFlight takes no source. |
+| iOS beta | The TestFlight public link, `https://testflight.apple.com/join/…` | Nothing. TestFlight takes no tags. |
 | iOS public | The App Store listing, `https://apps.apple.com/app/…/id…` | The App Store label of the latest touch, with `NEXT_PUBLIC_APPLE_PROVIDER_TOKEN` |
 
 - **Android:** use the store listing, not the open test join page. Only the store listing keeps the install referrer. A tester joins the open test once, then installs from the store listing.

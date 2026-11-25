@@ -13,8 +13,8 @@ The link carries these fields only when `NEXT_PUBLIC_IOS_STORE_URL` is an `apps.
 
 ## Read the numbers
 
-- **A missing row is not zero.** Apple shows a label only after 5 or more people make a first-time download through it in the date range. Each metric of a shown label also needs 5 or more. A label or a metric below the limit does not show at all. Report it as "no data", never as 0.
-- **Widen the date range** when a row is missing. A week or a month often passes the limit when a day does not.
+- **A missing row is not zero.** Apple shows a label only after 5 or more people make a first-time download through it. Each metric of a shown label also needs 5 or more in the selected date range. A label or a metric below its limit does not show at all. Report it as "no data", never as 0.
+- **Widen the date range** when a metric is missing. A week or a month often passes the limit when a day does not.
 - **The rows add up to less than the real total.** Hidden rows are not in the sum.
 - **Data comes late.** A new label shows after at least 24 hours. Apple's Reports API marks a day as complete two days later.
 - **Reports start after launch.** The Campaigns view shows only after the app is live on the App Store and has a day of data.
@@ -36,7 +36,7 @@ The website labels every App Store link that it builds, including `unknown` for 
 
 ## TestFlight
 
-TestFlight takes no App Store label and has no source reports. The website sends a TestFlight link without changes.
+TestFlight takes no tags and has no source reports. The website sends a TestFlight link without changes.
 
 - **Clicks:** `store_click` with `destination` = `testflight` in GA4 and Amplitude. It carries the first and latest touch.
 - **Testers:** App Store Connect, TestFlight, shows the public link totals for 30 days. These are views, accepted, did not meet criteria, and did not accept. It also shows installs, sessions and crashes for each build.

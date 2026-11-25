@@ -83,7 +83,7 @@ An App Store link carries one App Store label in Apple's `ct` field. App Store C
 | A source in a fixed table above | `<medium>-<source>` | `social-reddit`, `organic-google`, `cpc-google` |
 | A referring site or app off the fixed tables | `referral` | `referral` |
 
-- Apple hides a label with fewer than 5 downloads. So a label names a group, never one article or one site. `utm_content` never reaches Apple.
+- Apple hides a label until 5 people make a first-time download through it. So a label names a group, never one article or one site. `utm_content` never reaches Apple.
 - Every label is 30 characters or fewer. That is Apple's limit. The website cuts a longer label.
 - Without a Campaign Code, a paid-article publisher in the source table gets its own label, such as `paid-article-<publisher>`. Keep publisher names short.
 - A paid-article publisher off the source table records as `unlisted`. Add the publisher to the table before its link goes live.
@@ -116,7 +116,7 @@ An App Store link carries one App Store label in Apple's `ct` field. App Store C
 - The website uses click IDs only to detect a paid ad: `gclid`, `gbraid`, `wbraid`, `msclkid`, `ttclid` and `rdt_cid`.
 - The browser keeps a short hash of each click ID. A new click ID counts as a new ad click. No tool receives the hash.
 - A tagged link that already counted counts again only when another site or app sends the visitor. A link reopened from a bookmark or the browser history has no referrer, so it does not count again.
-- A new visit from the latest source moves the latest landing page and paid status to that visit.
+- A new visit from the source of the latest touch becomes the latest touch. The latest landing page and paid status then come from that visit.
 - A click ID sets the source, medium and paid status, even when the tags differ. The tags still set `utm_campaign` and `utm_content`.
 - A visit from Google Play, TestFlight or the App Store keeps the earlier source. It is a return from a store click. GA4 receives no referrer for it.
 - A link opened from Gmail has no tag. The website records its paid status as `unknown`.

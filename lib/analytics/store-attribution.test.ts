@@ -4,8 +4,12 @@ import { storeDestination, withStoreAttribution } from "./store-attribution";
 
 const PLAY = "https://play.google.com/store/apps/details?id=com.blueplanit.tend";
 const TESTFLIGHT = "https://testflight.apple.com/join/abc";
+const APP_STORE = "https://apps.apple.com/app/tend/id6700000000";
+const PROVIDER_TOKEN = "118765432";
 
-function attributionFrom(...loads: { href: string; referrer?: string }[]) {
+type Load = { href: string; referrer?: string };
+
+function attributionFrom(...loads: Load[]) {
   let saved: string | null = null;
   for (const load of loads) {
     saved = JSON.stringify(
@@ -63,7 +67,7 @@ describe("the Android store link", () => {
 });
 
 describe("the TestFlight link", () => {
-  it("stays as it is, because TestFlight takes no App Store label", () => {
+  it("stays as it is, because TestFlight takes no tags", () => {
     const attribution = attributionFrom({
       href: "https://tend.example/?utm_source=reddit&utm_medium=social",
     });
@@ -71,11 +75,13 @@ describe("the TestFlight link", () => {
   });
 });
 
-const APP_STORE = "https://apps.apple.com/app/tend/id6700000000";
-const PROVIDER_TOKEN = "118765432";
-
-function appStoreUrlAfter(...loads: { href: string; referrer?: string }[]) {
+function appStoreUrlAfter(...loads: Load[]) {
   return new URL(withStoreAttribution(APP_STORE, attributionFrom(...loads), PROVIDER_TOKEN));
+}
+
+// The App Store label (ct) of the App Store link after these page loads.
+function labelAfter(...loads: Load[]) {
+  return appStoreUrlAfter(...loads).searchParams.get("ct");
 }
 
 describe("the App Store link", () => {
@@ -90,42 +96,34 @@ describe("the App Store link", () => {
   });
 
   it("labels a listed source as medium-source", () => {
-    expect(appStoreUrlAfter({ href: "https://tend.example/?utm_source=reddit&utm_medium=social" })
-      .searchParams.get("ct")).toBe("social-reddit");
-    expect(appStoreUrlAfter({ href: "https://tend.example/", referrer: "https://www.google.com/" })
-      .searchParams.get("ct")).toBe("organic-google");
-    expect(appStoreUrlAfter({ href: "https://tend.example/", referrer: "https://claude.ai/" })
-      .searchParams.get("ct")).toBe("ai-answer-claude");
+    expect(labelAfter({ href: "https://tend.example/?utm_source=reddit&utm_medium=social" })).toBe("social-reddit");
+    expect(labelAfter({ href: "https://tend.example/", referrer: "https://www.google.com/" })).toBe("organic-google");
+    expect(labelAfter({ href: "https://tend.example/", referrer: "https://claude.ai/" })).toBe("ai-answer-claude");
   });
 
-  it("labels a source off the fixed tables with its medium only, so small sites share one row", () => {
-    expect(appStoreUrlAfter({ href: "https://tend.example/", referrer: "https://jo-smith.substack.com/p/money" })
-      .searchParams.get("ct")).toBe("referral");
-    expect(appStoreUrlAfter({ href: "https://tend.example/", referrer: "android-app://com.facebook.katana/" })
-      .searchParams.get("ct")).toBe("referral");
+  it("labels a referring site or app off the fixed tables as referral, so small sites share one row", () => {
+    expect(labelAfter({ href: "https://tend.example/", referrer: "https://jo-smith.substack.com/p/money" })).toBe("referral");
+    expect(labelAfter({ href: "https://tend.example/", referrer: "android-app://com.facebook.katana/" })).toBe("referral");
   });
 
   it("labels a tag with an unlisted medium as unlisted, even with a listed source", () => {
-    expect(appStoreUrlAfter({ href: "https://tend.example/?utm_source=reddit&utm_medium=Social" })
-      .searchParams.get("ct")).toBe("unlisted");
+    expect(labelAfter({ href: "https://tend.example/?utm_source=reddit&utm_medium=Social" })).toBe("unlisted");
   });
 
   it("labels a tag with an unlisted source as unlisted, so a typo never joins a real row", () => {
-    expect(appStoreUrlAfter({ href: "https://tend.example/?utm_source=Reddit&utm_medium=social" })
-      .searchParams.get("ct")).toBe("unlisted");
+    expect(labelAfter({ href: "https://tend.example/?utm_source=Reddit&utm_medium=social" })).toBe("unlisted");
   });
 
   it("labels an unknown source as unknown, so every website download gets a label", () => {
-    expect(appStoreUrlAfter({ href: "https://tend.example/" }).searchParams.get("ct")).toBe("unknown");
+    expect(labelAfter({ href: "https://tend.example/" })).toBe("unknown");
     const serverLink = new URL(withStoreAttribution(APP_STORE, null, PROVIDER_TOKEN));
     expect(serverLink.searchParams.get("ct")).toBe("unknown");
   });
 
   it("labels a paid source without a listed Campaign Code as medium-source", () => {
-    expect(appStoreUrlAfter({ href: "https://tend.example/?utm_source=tiktok&utm_medium=paid-social&utm_campaign=spring" })
-      .searchParams.get("ct")).toBe("paid-social-tiktok");
-    expect(appStoreUrlAfter({ href: "https://tend.example/?gclid=abc123" })
-      .searchParams.get("ct")).toBe("cpc-google");
+    expect(labelAfter({ href: "https://tend.example/?utm_source=tiktok&utm_medium=paid-social&utm_campaign=spring" }))
+      .toBe("paid-social-tiktok");
+    expect(labelAfter({ href: "https://tend.example/?gclid=abc123" })).toBe("cpc-google");
   });
 
   it("stays as it is without a provider token", () => {
@@ -135,10 +133,8 @@ describe("the App Store link", () => {
 
   it("keeps Apple's own parameters", () => {
     expect(appStoreUrlAfter({ href: "https://tend.example/" }).pathname).toBe("/app/tend/id6700000000");
-    const withCountry = new URL(
-      withStoreAttribution(APP_STORE + "?l=en", null, PROVIDER_TOKEN),
-    );
-    expect(withCountry.searchParams.get("l")).toBe("en");
+    const withLanguage = new URL(withStoreAttribution(APP_STORE + "?l=en", null, PROVIDER_TOKEN));
+    expect(withLanguage.searchParams.get("l")).toBe("en");
   });
 });
 

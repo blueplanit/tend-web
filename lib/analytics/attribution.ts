@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // The attribution contract. It records where a visitor came from, in a fixed set
-// of values, for every analytics destination. The reviewed URL tags mirror
+// of values, for every analytics tool. The reviewed URL tags mirror
 // docs/url-tags.md. Change both together.
 
 // A visit with no tag and no external referrer. It does not prove unpaid traffic.
@@ -389,8 +389,8 @@ export function prefixedTags(prefix: "utm" | "first" | "latest", touch: Signal):
 const APP_STORE_LABEL_MAX = 30;
 
 // The App Store label (ct) of a touch. docs/url-tags.md states the rules, in this order.
-// Apple hides a label with fewer than 5 downloads. So a label names a group, never one
-// article or one site.
+// Apple hides a label until 5 people make a first-time download through it.
+// So a label names a group, never one article or one site.
 export function appStoreLabel(touch: Signal): string {
   return labelFor(touch).slice(0, APP_STORE_LABEL_MAX);
 }

@@ -27,21 +27,21 @@ const STORE_LISTING_PATH = "/store/apps/details";
 export function withStoreAttribution(
   url: string,
   attribution: Attribution | null,
-  appleProviderToken: string | null = null,
+  providerToken: string | null = null,
 ): string {
   switch (storeDestination(url)) {
     case "play_store":
       return playStoreLink(new URL(url), attribution);
     case "app_store":
-      return appStoreLink(new URL(url), attribution, appleProviderToken);
+      return appStoreLink(new URL(url), attribution, providerToken);
     default:
       return url;
   }
 }
 
 // The app reads the install referrer on first open and ties the install to its source
-// and Campaign. utm_ fields hold the latest source. Play Console reports installs by them.
-// first_ fields hold the first source. Only the app reads them.
+// and Campaign. utm_ fields hold the latest touch. Play Console reports installs by them.
+// first_ fields hold the first touch. Only the app reads them.
 function playStoreLink(target: URL, attribution: Attribution | null) {
   if (target.pathname !== STORE_LISTING_PATH || !attribution || !isKnown(attribution.latest)) {
     return target.toString();
