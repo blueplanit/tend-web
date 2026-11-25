@@ -75,7 +75,7 @@ The fixed ID of our Apple developer account, in Apple's `pt` field. App Store Co
 _Avoid_: pt, Apple token, account ID
 
 **Destination**:
-The store that a beta button opens: `play_store`, `testflight` or `app_store`. Each `store_click` event carries it. The website reads it from the host of the link.
+The store that a beta button opens: `play_store`, `testflight` or `app_store`. The website reads it from the host of the link. A `store_click` event carries it when the host is one of these stores.
 _Avoid_: store type, target
 
 The `platform` event property is different. It holds `android` or `ios`.

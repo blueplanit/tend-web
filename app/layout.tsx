@@ -4,6 +4,7 @@ import "./globals.css";
 import { Analytics } from "@/components/analytics/analytics";
 import { SiteStructuredData } from "@/components/structured-data";
 import { getLandingCopy } from "@/lib/landing-copy";
+import { NON_PRODUCTION_NOINDEX, SHARED_OPEN_GRAPH } from "@/lib/metadata";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 // The brand fonts are stored in the repo, so a build needs no network access.
@@ -32,22 +33,12 @@ export async function generateMetadata(): Promise<Metadata> {
     // the homepage shows content="default". See docs/adr/0001, Consequences.
     other: { "tend-copy-source": source },
     title: { default: meta.title, template: `%s | ${SITE_NAME}` },
-    description: meta.description,
+    // Only site-wide fields go here. lib/metadata.ts says why.
     applicationName: SITE_NAME,
-    alternates: { canonical: "/" },
-    openGraph: {
-      type: "website",
-      url: "/",
-      siteName: SITE_NAME,
-      title: meta.title,
-      description: meta.description,
-      locale: "en_US",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: meta.title,
-      description: meta.description,
-    },
+    robots: NON_PRODUCTION_NOINDEX,
+    openGraph: SHARED_OPEN_GRAPH,
+    // X reads the title and the description from the Open Graph fields.
+    twitter: { card: "summary_large_image" },
     icons: { apple: "/apple-touch-icon.png" },
   };
 }

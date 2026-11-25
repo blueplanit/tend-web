@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import { z } from "zod";
+import { pageMetadata } from "./metadata";
 import {
   CONTENTFUL_CACHE_PROFILE,
   CONTENT_TYPES,
@@ -48,4 +50,10 @@ export async function getLegalDocument(slug: LegalSlug): Promise<LegalDocument> 
   const entry = await findEntry(legalLookup(slug));
   if (!entry) throw new Error(`No published legalDocument entry "${slug}".`);
   return legalDocumentSchema.parse(entry.fields);
+}
+
+// The metadata of a legal page. The page path is the slug.
+export async function legalPageMetadata(slug: LegalSlug): Promise<Metadata> {
+  const { title, description } = await getLegalDocument(slug);
+  return pageMetadata({ path: `/${slug}`, title, description });
 }

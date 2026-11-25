@@ -60,15 +60,15 @@ Analytics and indexing run on the production deployment only. The site reads `VE
 
 | Amplitude | GA4 | Properties |
 |---|---|---|
-| `[Amplitude] Page Viewed` | `page_view` | UTM parameters and referrer, captured automatically |
+| `[Amplitude] Page Viewed` | `page_view` | The page URL without its query or fragment. GA4 also receives the listed URL tags and a shortened referrer. [docs/url-tags.md](docs/url-tags.md) states both rules. |
 | `Beta Button Clicked` | `beta_button_click` | `platform`, `location`, `available` |
 | `Store Clicked` | `store_click` | `platform`, `location`, `destination` |
 
-Every event also carries the first and latest touch, and `current_page`.
+Every event also carries the first and latest touch. Each click also carries `current_page`.
 
 A click on a "Coming soon" button sends `available: false`. That measures demand for each platform before the beta opens.
 
-`destination` names the store that a click opens: `play_store`, `testflight` or `app_store`. GA4 shows an event parameter only after you register it as a custom dimension with Event scope.
+`destination` names the store that a click opens: `play_store`, `testflight` or `app_store`. A link to any other host sends no `destination`. GA4 shows an event parameter only after you register it as a custom dimension with Event scope. [docs/ga4-reporting.md](docs/ga4-reporting.md) lists the parameters and says how to read the reports.
 
 ## Store links
 

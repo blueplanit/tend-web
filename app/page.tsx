@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { FaqStructuredData } from "@/components/structured-data";
 import {
   Beta,
@@ -11,6 +12,14 @@ import {
   WhoFor,
 } from "@/components/landing/sections";
 import { getLandingCopy } from "@/lib/landing-copy";
+import { pageMetadata } from "@/lib/metadata";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const {
+    copy: { meta },
+  } = await getLandingCopy();
+  return pageMetadata({ path: "/", title: meta.title, description: meta.description });
+}
 
 export default async function Home() {
   const { copy } = await getLandingCopy();
