@@ -68,7 +68,7 @@ Every event also carries the first and latest touch, and `current_page`.
 
 A click on a "Coming soon" button sends `available: false`. That measures demand for each platform before the beta opens.
 
-`destination` names the store that a click opens: `play_store`, `testflight` or `app_store`. GA4 shows an event parameter only after you register it as a custom dimension with Event scope.
+`destination` names the store that a click opens: `play_store`, `testflight` or `app_store`. GA4 shows an event parameter only after you register it as a custom dimension with Event scope. [docs/ga4-reporting.md](docs/ga4-reporting.md) lists the parameters and says how to read the reports.
 
 ## Store links
 

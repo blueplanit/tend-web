@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
 import { getLandingCopy } from "@/lib/landing-copy";
 import { getLegalDocument } from "@/lib/legal-documents";
+import { openGraphFor } from "@/lib/metadata";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { title, description } = await getLegalDocument("terms");
@@ -9,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: "/terms" },
-    openGraph: { url: "/terms", title, description },
+    openGraph: openGraphFor({ url: "/terms", title, description }),
   };
 }
 

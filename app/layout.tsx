@@ -4,6 +4,7 @@ import "./globals.css";
 import { Analytics } from "@/components/analytics/analytics";
 import { SiteStructuredData } from "@/components/structured-data";
 import { getLandingCopy } from "@/lib/landing-copy";
+import { openGraphFor } from "@/lib/metadata";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 // The brand fonts are stored in the repo, so a build needs no network access.
@@ -34,15 +35,10 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: meta.title, template: `%s | ${SITE_NAME}` },
     description: meta.description,
     applicationName: SITE_NAME,
-    alternates: { canonical: "/" },
-    openGraph: {
-      type: "website",
-      url: "/",
-      siteName: SITE_NAME,
-      title: meta.title,
-      description: meta.description,
-      locale: "en_US",
-    },
+    // No canonical URL and no openGraph URL here. A page that sets none would get
+    // the homepage URL, and Google would treat that page as a copy of the homepage.
+    // Each page sets its own.
+    openGraph: openGraphFor({ title: meta.title, description: meta.description }),
     twitter: {
       card: "summary_large_image",
       title: meta.title,

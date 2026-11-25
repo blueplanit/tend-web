@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { FaqStructuredData } from "@/components/structured-data";
 import {
   Beta,
@@ -11,6 +12,17 @@ import {
   WhoFor,
 } from "@/components/landing/sections";
 import { getLandingCopy } from "@/lib/landing-copy";
+import { openGraphFor } from "@/lib/metadata";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const {
+    copy: { meta },
+  } = await getLandingCopy();
+  return {
+    alternates: { canonical: "/" },
+    openGraph: openGraphFor({ url: "/", title: meta.title, description: meta.description }),
+  };
+}
 
 export default async function Home() {
   const { copy } = await getLandingCopy();
