@@ -46,10 +46,13 @@ function referrerOrigin() {
 // Sends one page view with a clean page location and referrer. Every later event on
 // the page reuses them. GA4's enhanced measurement setting "Page changes based on
 // browser history events" must be off, or GA4 counts in-app page changes twice.
+// A second call for the same page sends nothing. React runs each effect twice in
+// development, and a repeated effect must not count one page view twice.
 export function trackGaPageView() {
   if (!initialized) return;
   safely("GA4 page view", () => {
     const location = pageLocationForGa(window.location.href);
+    if (location === previousLocation) return;
     window.gtag?.("set", { page_location: location, page_referrer: previousLocation ?? referrerOrigin() });
     window.gtag?.("event", "page_view");
     previousLocation = location;
