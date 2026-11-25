@@ -4,7 +4,7 @@ import "./globals.css";
 import { Analytics } from "@/components/analytics/analytics";
 import { SiteStructuredData } from "@/components/structured-data";
 import { getLandingCopy } from "@/lib/landing-copy";
-import { DEPLOYMENT_ROBOTS, SHARED_OPEN_GRAPH } from "@/lib/metadata";
+import { NON_PRODUCTION_NOINDEX, SHARED_OPEN_GRAPH } from "@/lib/metadata";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 // The brand fonts are stored in the repo, so a build needs no network access.
@@ -36,7 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
     // Only site-wide fields go here. Each page inherits every field that it does not set.
     // So each page sets its own description, canonical URL and Open Graph fields.
     applicationName: SITE_NAME,
-    robots: DEPLOYMENT_ROBOTS,
+    robots: NON_PRODUCTION_NOINDEX,
     openGraph: SHARED_OPEN_GRAPH,
     // X reads the title and the description from the Open Graph fields.
     twitter: { card: "summary_large_image" },

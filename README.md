@@ -60,11 +60,11 @@ Analytics and indexing run on the production deployment only. The site reads `VE
 
 | Amplitude | GA4 | Properties |
 |---|---|---|
-| `[Amplitude] Page Viewed` | `page_view` | UTM parameters and referrer, captured automatically |
+| `[Amplitude] Page Viewed` | `page_view` | The page URL without its query or fragment. GA4 also receives the listed URL tags and the referrer origin. See [docs/url-tags.md](docs/url-tags.md). |
 | `Beta Button Clicked` | `beta_button_click` | `platform`, `location`, `available` |
 | `Store Clicked` | `store_click` | `platform`, `location`, `destination` |
 
-Every event also carries the first and latest touch, and `current_page`.
+Every event also carries the first and latest touch. Each click also carries `current_page`.
 
 A click on a "Coming soon" button sends `available: false`. That measures demand for each platform before the beta opens.
 

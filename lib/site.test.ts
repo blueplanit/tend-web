@@ -1,10 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { importWithEnv } from "./test-utils/import-with-env";
+import { DEFAULT_SITE_URL } from "./site";
 
-// lib/site.ts reads the environment once, on import. So each test loads a fresh module.
 async function siteUrlFor(value: string) {
-  vi.resetModules();
-  vi.stubEnv("NEXT_PUBLIC_SITE_URL", value);
-  return (await import("./site")).SITE_URL;
+  return (await importWithEnv({ NEXT_PUBLIC_SITE_URL: value }, () => import("./site"))).SITE_URL;
 }
 
 afterEach(() => {
@@ -13,11 +12,11 @@ afterEach(() => {
 
 describe("SITE_URL", () => {
   it("uses the Vercel URL when the variable is empty", async () => {
-    expect(await siteUrlFor("")).toBe("https://tend-web-eight.vercel.app");
+    expect(await siteUrlFor("")).toBe(DEFAULT_SITE_URL);
   });
 
   it("uses the Vercel URL when the variable holds only spaces", async () => {
-    expect(await siteUrlFor("  ")).toBe("https://tend-web-eight.vercel.app");
+    expect(await siteUrlFor("  ")).toBe(DEFAULT_SITE_URL);
   });
 
   it("uses the domain from the variable, without spaces", async () => {

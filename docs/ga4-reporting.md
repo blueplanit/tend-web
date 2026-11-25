@@ -14,6 +14,7 @@ How to read website visits and store clicks in GA4, and what the numbers cannot 
 A Founder does these steps.
 
 1. **Check the production configuration.** Vercel production needs `NEXT_PUBLIC_GA_MEASUREMENT_ID` and `NEXT_PUBLIC_AMPLITUDE_API_KEY`. "Automatically expose System Environment Variables" must stay on.
+   `NEXT_PUBLIC_GA_MEASUREMENT_ID` must match the measurement ID of the web stream, in Admin > Data streams. A wrong ID sends the events to another property.
 2. **Turn off one page view setting.** Go to Admin > Data streams > the web stream > Enhanced measurement > Page views > Show advanced settings. Turn off "Page changes based on browser history events". The website sends its own `page_view` for each page change. With the setting on, GA4 counts each page change twice.
 3. **Register the custom dimensions.** Go to Admin > Data display > Custom definitions > Create custom dimension. Set the scope to Event. Use the event parameter name as the dimension name. Register all 17 parameters in the table below.
 4. **Filter out local test traffic.** Go to Admin > Data filters > Create filter > Developer traffic. Set the filter to Active. A local test with `NEXT_PUBLIC_ANALYTICS_LOCAL=true` sends events to the same property in debug mode. This filter removes them from reports.
@@ -41,7 +42,7 @@ Do step 4 before the first local test. An Active filter is permanent. It never r
 | `current_page` | Clicks | The page path of the click |
 | `platform` | Clicks | `android` or `ios` |
 | `location` | Clicks | The button position: `hero` or `beta_section` |
-| `destination` | `store_click` | The Destination: `play_store`, `testflight` or `app_store` |
+| `destination` | `store_click` | The Destination: `play_store`, `testflight` or `app_store`. Missing when the link goes to another host |
 | `available` | `beta_button_click` | Always `false`. The button had no link yet |
 
 These are 17 of the 50 event-scoped custom dimensions that a standard property allows.
@@ -77,7 +78,7 @@ GA4 enhanced measurement also sends a `click` event with `outbound` = `true` for
 ## Read the numbers
 
 - **A session is not a touch.** GA4 starts a new session after 30 minutes without activity, by default. Its "Landing page" is the first page of each session. Our `first_landing_page` and `latest_landing_page` change only when a new touch arrives. So the landing-page totals differ between the two reports.
-- **GA4 has its own source rules.** "Session source / medium" comes from GA4's rules for each session. The touch fields come from the website's rules in [url-tags.md](url-tags.md). For example, an untagged return keeps the earlier touch on our side. Compare trends between the two, not totals.
+- **GA4 session source has its own rules.** "Session source / medium" comes from GA4's rules for each session. The touch fields come from the website's rules in [url-tags.md](url-tags.md). For example, an untagged return keeps the earlier touch on our side. Compare trends between the two, not totals.
 - **`unknown` is not unpaid.** A touch is `unknown` when nothing proves its paid status. Report it apart from `unpaid`.
 - **Data comes late.** Daily data is usually ready after about 12 hours. Processing can take 24 to 48 hours. Numbers can change in that time.
 - **Small rows can hide.** GA4 can withhold rows to protect individual users. A wider date range often shows them.
@@ -97,7 +98,8 @@ GA4 enhanced measurement also sends a `click` event with `outbound` = `true` for
 
 - A new page, such as an article, sends `page_view` and the touch fields with no extra code. The root layout loads analytics on every page.
 - Only the `BetaButtons` component sends `beta_button_click` and `store_click`. Use it for each store link on a new page. A plain link sends no store click.
-- Each new page sets its own description, canonical URL and Open Graph fields. Use `alternates` and `openGraphFor` from `lib/metadata.ts`, as `app/privacy/page.tsx` does. A page without them has no canonical URL.
+- Each new page sets its description, canonical URL and Open Graph fields with `pageMetadata` from `lib/metadata.ts`. `app/privacy/page.tsx` shows how. A page without it has no canonical URL.
+- Do not set `robots` on a page. A page `robots` field replaces the `noindex` tag on previews and local runs.
 - Add each new page to `app/sitemap.ts`.
 
 ## Previews and local runs

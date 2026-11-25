@@ -12,17 +12,13 @@ import {
   WhoFor,
 } from "@/components/landing/sections";
 import { getLandingCopy } from "@/lib/landing-copy";
-import { openGraphFor } from "@/lib/metadata";
+import { pageMetadata } from "@/lib/metadata";
 
 export async function generateMetadata(): Promise<Metadata> {
   const {
     copy: { meta },
   } = await getLandingCopy();
-  return {
-    description: meta.description,
-    alternates: { canonical: "/" },
-    openGraph: openGraphFor({ url: "/", title: meta.title, description: meta.description }),
-  };
+  return pageMetadata({ path: "/", title: meta.title, description: meta.description });
 }
 
 export default async function Home() {

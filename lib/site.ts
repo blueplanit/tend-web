@@ -3,8 +3,8 @@ export const COMPANY_NAME = "Blue Planit LLC";
 
 // The domain is not set yet (BP-1351). Set NEXT_PUBLIC_SITE_URL in Vercel when it is.
 // An empty value also gives the Vercel URL. An empty value cannot break the build.
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://tend-web-eight.vercel.app";
+export const DEFAULT_SITE_URL = "https://tend-web-eight.vercel.app";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.trim() || DEFAULT_SITE_URL;
 
 export const FEEDBACK_EMAIL = "admin@blueplanit.co";
 
