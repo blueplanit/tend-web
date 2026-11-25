@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { EVENTS, trackEvent } from "@/lib/analytics/events";
 import { getAttribution } from "@/lib/analytics/attribution-store";
 import { withStoreAttribution } from "@/lib/analytics/store-attribution";
@@ -17,11 +17,16 @@ type Props = {
   comingSoonNotice: string;
 };
 
+// The saved source changes only on a full page load, so nothing needs to subscribe.
+const noSubscription = () => () => {};
+
 // Before a beta link exists, the button still counts clicks as beta_button_click.
 // That measures demand for each platform before the beta opens. A click on a real
 // link counts as store_click instead, so the two never mix.
 export function BetaButtons({ location, tone = "light", comingSoonNotice }: Props) {
   const [showNotice, setShowNotice] = useState(false);
+  // The server has no saved source, so its links carry none. The browser adds it after load.
+  const attribution = useSyncExternalStore(noSubscription, getAttribution, () => null);
 
   const buttonClass =
     tone === "light"
@@ -38,18 +43,18 @@ export function BetaButtons({ location, tone = "light", comingSoonNotice }: Prop
           const className = `inline-flex min-h-12 cursor-pointer items-center justify-center gap-3 rounded-full px-6 py-3 text-base font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${buttonClass}`;
 
           if (link) {
+            // The href itself carries the source, so a link opened in a new tab or copied
+            // keeps it too. A long-press or a copied link sends no store_click.
+            const trackStoreClick = () =>
+              trackEvent(EVENTS.storeClicked, { platform: key, location });
             return (
               <a
                 key={key}
-                href={link}
+                href={withStoreAttribution(link, key, attribution)}
                 className={className}
-                onClick={(event) => {
-                  trackEvent(EVENTS.storeClicked, { platform: key, location });
-                  event.currentTarget.href = withStoreAttribution(
-                    link,
-                    key,
-                    getAttribution(),
-                  );
+                onClick={trackStoreClick}
+                onAuxClick={(event) => {
+                  if (event.button === 1) trackStoreClick(); // middle click
                 }}
               >
                 Join the {label}

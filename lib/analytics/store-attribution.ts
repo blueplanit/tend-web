@@ -1,5 +1,5 @@
 import type { BetaPlatform } from "@/lib/site";
-import { UNKNOWN, touchTags, type Attribution } from "./attribution";
+import { UNKNOWN, prefixedTags, type Attribution } from "./attribution";
 
 // Only the store listing keeps the install referrer. The open test join page drops it.
 const STORE_LISTING_PATH = "/store/apps/details";
@@ -17,11 +17,10 @@ export function withStoreAttribution(
   if (platform !== "android" || !attribution || attribution.latest.medium === UNKNOWN) return url;
   const { first, latest } = attribution;
 
-  const tags: Record<string, string> = {};
-  for (const [key, value] of Object.entries(touchTags(latest))) tags[`utm_${key}`] = value;
-  if (first.medium !== UNKNOWN) {
-    for (const [key, value] of Object.entries(touchTags(first))) tags[`first_${key}`] = value;
-  }
+  const tags = {
+    ...prefixedTags("utm", latest),
+    ...(first.medium === UNKNOWN ? {} : prefixedTags("first", first)),
+  };
 
   try {
     const target = new URL(url);

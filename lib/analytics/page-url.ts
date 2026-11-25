@@ -19,8 +19,7 @@ export function urlWithoutQueryOrFragment(href: string): string {
 export function pageLocationForGa(href: string): string {
   try {
     const url = new URL(href);
-    const tags = Object.entries(urlTags(href) ?? {}).map(([key, value]) => [`utm_${key}`, value]);
-    const query = new URLSearchParams(tags).toString();
+    const query = new URLSearchParams(urlTags(href) ?? {}).toString();
     return url.origin + url.pathname + (query ? `?${query}` : "");
   } catch {
     return "";

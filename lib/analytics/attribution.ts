@@ -290,11 +290,11 @@ function readUrl(params: URLSearchParams): { signal: Signal; urlKey: string } | 
   return tagged && { signal: tagged, urlKey: sourceKey(tagged) };
 }
 
-// The source tags of a URL after the reviewed list applies, or null when it has none.
+// The utm_ tags of a URL after the reviewed list applies, or null when it has none.
 // GA4 reads URL tags for its own reports, so it gets these values, not the raw ones.
 export function urlTags(href: string): Record<string, string> | null {
   const fromUrl = readUrl(new URL(href).searchParams);
-  return fromUrl && touchTags(fromUrl.signal);
+  return fromUrl && prefixedTags("utm", fromUrl.signal);
 }
 
 // The source of one page load. fromOtherSite is true when another site or app sent
@@ -365,16 +365,22 @@ export function parseAttribution(saved: string | null): Attribution | null {
 }
 
 // The source fields of a touch. Campaign and content appear only when present.
-export function touchTags(touch: Signal): Record<string, string> {
+function touchTags(touch: Signal): Record<string, string> {
   const tags: Record<string, string> = { source: touch.source, medium: touch.medium };
   if (touch.campaign) tags.campaign = touch.campaign;
   if (touch.content) tags.content = touch.content;
   return tags;
 }
 
+// The four tags of a touch, each with a prefix, such as utm_source or first_source.
+export function prefixedTags(prefix: string, touch: Signal): Record<string, string> {
+  const tags: Record<string, string> = {};
+  for (const [key, value] of Object.entries(touchTags(touch))) tags[`${prefix}_${key}`] = value;
+  return tags;
+}
+
 function touchParams(prefix: "first" | "latest", touch: Touch) {
-  const params: Record<string, string> = {};
-  for (const [key, value] of Object.entries(touchTags(touch))) params[`${prefix}_${key}`] = value;
+  const params = prefixedTags(prefix, touch);
   params[`${prefix}_paid_status`] = touch.paidStatus;
   params[`${prefix}_landing_page`] = touch.landingPage;
   return params;
