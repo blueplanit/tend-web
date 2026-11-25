@@ -4,11 +4,11 @@
 // The site shows this file only when Contentful fails, or when its JSON is invalid.
 // This file is not kept in sync with Contentful. See docs/adr/0001-contentful-content.md.
 //
-// Rules for the copy, in Contentful and here (tend-marketing GOAL.md and the Pippy brand kit):
+// Rules for the copy, in Contentful and here:
 // - Brand copy says "we".
 // - No promised outcomes. No financial advice. No shame or fear.
 // - Pippy is never sad, sick or gone.
-// - Use the terms in tend-marketing GLOSSARY.md: garden, weed, mood, check-in,
+// - Use the terms in CONTEXT.md: garden, weed, mood, check-in,
 //   extra payment. Write them in lowercase. Only names keep a capital: Tend, Pippy.
 // - A metaphor always comes with the financial concept behind it. For example,
 //   "a weed regrows" comes with what interest is and how it adds up.

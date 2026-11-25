@@ -10,13 +10,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Tend web
 
-This repo holds the Tend landing page. Marketing rules, terms and the brand kit live in `../tend-marketing`. Read its `AGENTS.md`, `GOAL.md` and `GLOSSARY.md` before you change copy.
+This repo holds the Tend landing page. Read `CONTEXT.md` before you change copy or name a domain concept.
 
 ## Copy rules
 
 These rules apply to all user-facing copy: page text, alt text, metadata and images.
 
-- Write each term from `GLOSSARY.md` or a `CONTEXT.md` in lowercase: garden, weed, mood, check-in, extra payment. Capitalize a term only at the start of a sentence or a heading. Names keep their capital: Tend, Pippy.
+- Write each term from `CONTEXT.md` in lowercase: garden, weed, mood, check-in, extra payment. Capitalize a term only at the start of a sentence or a heading. Names keep their capital: Tend, Pippy.
 - Ground each metaphor in its financial concept. Follow the metaphor with a short, plain sentence about the mechanics. Example: "Each weed regrows a little every night" comes with what interest is and how it adds up.
 - Brand copy says "we". No promised outcomes. No financial advice. No shame or fear.
 - Each product fact comes from the prototype. Check it against the current app before you push.
@@ -34,4 +34,4 @@ The five default labels: needs-triage, needs-info, ready-for-agent, ready-for-hu
 
 ### Domain docs
 
-Single-context: ADRs in `docs/adr/`. The Tend glossary lives in the tend-marketing repo. See `docs/agents/domain.md`.
+Single-context: `CONTEXT.md` at the root, ADRs in `docs/adr/`. See `docs/agents/domain.md`.

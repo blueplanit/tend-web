@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // The attribution contract. It records where a visitor came from, in a fixed set
 // of values, for every analytics destination. The reviewed URL tags mirror
-// url-tags.md in the tend-marketing repo. Change both together.
+// docs/url-tags.md. Change both together.
 
 // A visit with no tag and no external referrer. It does not prove unpaid traffic.
 export const UNKNOWN = "unknown";
@@ -383,6 +383,31 @@ export function prefixedTags(prefix: "utm" | "first" | "latest", touch: Signal):
   const tags: Record<string, string> = {};
   for (const [key, value] of Object.entries(touchTags(touch))) tags[`${prefix}_${key}`] = value;
   return tags;
+}
+
+// Apple's limit for the ct field.
+const APP_STORE_LABEL_MAX = 30;
+
+// The App Store label (ct) of a touch. docs/url-tags.md states the rules, in this order.
+// Apple hides a label with fewer than 5 downloads, so a label names a group, never one
+// article or one site.
+export function appStoreLabel(touch: Signal): string {
+  return labelFor(touch).slice(0, APP_STORE_LABEL_MAX);
+}
+
+function labelFor(touch: Signal): string {
+  // A paid touch with a listed Campaign Code: the code, such as pa002.
+  if (touch.paidStatus === "paid" && touch.campaign && CAMPAIGN_CODE.test(touch.campaign)) {
+    return touch.campaign;
+  }
+  // An unknown or unlisted medium: that value.
+  if (!isMedium(touch.medium)) return touch.medium;
+  // An unlisted source is a tag error. It must not join a real row.
+  if (touch.source === UNLISTED) return UNLISTED;
+  // A source on the fixed lists: medium-source, such as social-reddit.
+  if (SOURCES.has(touch.source)) return `${touch.medium}-${touch.source}`;
+  // Any other source, such as a referring site: the medium only, such as referral.
+  return touch.medium;
 }
 
 function touchParams(prefix: "first" | "latest", touch: Touch) {

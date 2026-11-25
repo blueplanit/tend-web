@@ -3,8 +3,8 @@
 import { useState, useSyncExternalStore } from "react";
 import { EVENTS, trackEvent } from "@/lib/analytics/events";
 import { getAttribution } from "@/lib/analytics/attribution-store";
-import { withStoreAttribution } from "@/lib/analytics/store-attribution";
-import { BETA_LINKS, type BetaPlatform } from "@/lib/site";
+import { storeDestination, withStoreAttribution } from "@/lib/analytics/store-attribution";
+import { APPLE_PROVIDER_TOKEN, BETA_LINKS, type BetaPlatform } from "@/lib/site";
 
 const PLATFORMS: { key: BetaPlatform; label: string }[] = [
   { key: "android", label: "Android beta" },
@@ -45,12 +45,20 @@ export function BetaButtons({ location, tone = "light", comingSoonNotice }: Prop
           if (link) {
             // The href itself carries the source. So a link opened in a new tab keeps it.
             // A copied link keeps it too. Only a click sends store_click.
+            // destination keeps TestFlight and App Store clicks apart.
+            const destination = storeDestination(link);
             return (
               <a
                 key={key}
-                href={withStoreAttribution(link, key, attribution)}
+                href={withStoreAttribution(link, attribution, APPLE_PROVIDER_TOKEN)}
                 className={className}
-                onClick={() => trackEvent(EVENTS.storeClicked, { platform: key, location })}
+                onClick={() =>
+                  trackEvent(EVENTS.storeClicked, {
+                    platform: key,
+                    location,
+                    ...(destination ? { destination } : {}),
+                  })
+                }
               >
                 Join the {label}
               </a>

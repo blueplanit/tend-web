@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Colors and type from the Pippy brand kit (tend-marketing scratch/). */
+/* Colors and type from the Pippy brand kit. */
 @theme {
   --color-mist: #f4f7f3;
   --color-sky: #ddebf3;
