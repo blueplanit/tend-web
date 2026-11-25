@@ -290,11 +290,11 @@ function readUrl(params: URLSearchParams): { signal: Signal; urlKey: string } | 
   return tagged && { signal: tagged, urlKey: sourceKey(tagged) };
 }
 
-// The source tags of a URL after the reviewed list applies, or null when it has none.
+// The utm_ tags of a URL after the reviewed list applies, or null when it has none.
 // GA4 reads URL tags for its own reports, so it gets these values, not the raw ones.
 export function urlTags(href: string): Record<string, string> | null {
   const fromUrl = readUrl(new URL(href).searchParams);
-  return fromUrl && touchTags(fromUrl.signal);
+  return fromUrl && prefixedTags("utm", fromUrl.signal);
 }
 
 // The source of one page load. fromOtherSite is true when another site or app sent
@@ -314,9 +314,14 @@ function readSignal(page: PageLoad): PageSignal | null {
   return referred && { signal: referred, fromOtherSite };
 }
 
+// A touch is known when a tag, a click ID or a referrer gave it a medium.
+export function isKnown(touch: Signal): boolean {
+  return touch.medium !== UNKNOWN;
+}
+
 // How much a touch tells us: 0 = unknown, 1 = an unlisted tag, 2 = a known source.
 function certainty(touch: Signal) {
-  if (touch.medium === UNKNOWN) return 0;
+  if (!isKnown(touch)) return 0;
   if (touch.source === UNLISTED || touch.medium === UNLISTED) return 1;
   return 2;
 }
@@ -365,16 +370,23 @@ export function parseAttribution(saved: string | null): Attribution | null {
 }
 
 // The source fields of a touch. Campaign and content appear only when present.
-export function touchTags(touch: Signal): Record<string, string> {
+function touchTags(touch: Signal): Record<string, string> {
   const tags: Record<string, string> = { source: touch.source, medium: touch.medium };
   if (touch.campaign) tags.campaign = touch.campaign;
   if (touch.content) tags.content = touch.content;
   return tags;
 }
 
+// Up to four tags of a touch, each with a prefix, such as utm_source or first_source.
+// Campaign and content appear only when present.
+export function prefixedTags(prefix: "utm" | "first" | "latest", touch: Signal): Record<string, string> {
+  const tags: Record<string, string> = {};
+  for (const [key, value] of Object.entries(touchTags(touch))) tags[`${prefix}_${key}`] = value;
+  return tags;
+}
+
 function touchParams(prefix: "first" | "latest", touch: Touch) {
-  const params: Record<string, string> = {};
-  for (const [key, value] of Object.entries(touchTags(touch))) params[`${prefix}_${key}`] = value;
+  const params = prefixedTags(prefix, touch);
   params[`${prefix}_paid_status`] = touch.paidStatus;
   params[`${prefix}_landing_page`] = touch.landingPage;
   return params;

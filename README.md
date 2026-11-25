@@ -49,6 +49,7 @@ Analytics and site URL, in Vercel. Each one is optional. A missing key turns its
 | `NEXT_PUBLIC_AMPLITUDE_API_KEY` | Amplitude project key |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | GA4 measurement ID, `G-…` |
 | `NEXT_PUBLIC_SITE_URL` | The final domain. The default is the Vercel URL. |
+| `NEXT_PUBLIC_ANDROID_STORE_URL` | The Google Play store listing, `https://play.google.com/store/apps/details?id=com.blueplanit.tend`. Without it, the Android button shows "Coming soon". |
 | `NEXT_PUBLIC_ANALYTICS_LOCAL` | `true` turns analytics on locally, for a test. Set it in `.env.local` only, never in Vercel. GA4 then runs in debug mode. |
 
 Analytics and indexing run on the production deployment only. The site reads `VERCEL_ENV` and `NEXT_PUBLIC_VERCEL_ENV` to know this. Keep "Automatically expose System Environment Variables" on in Vercel.
