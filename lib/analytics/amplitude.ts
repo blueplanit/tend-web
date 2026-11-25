@@ -3,6 +3,9 @@
 import * as amplitude from "@amplitude/analytics-browser";
 import { ANALYTICS_ENABLED } from "@/lib/site";
 import { getAttributionParams } from "./attribution-store";
+import { pageUrlWithoutQuery } from "./page-url";
+
+const PAGE_LOCATION = "[Amplitude] Page Location";
 
 const AMPLITUDE_API_KEY = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
 
@@ -58,6 +61,9 @@ export function initAmplitude() {
         if (event.event_type.startsWith("$")) return event; // identify and group calls
         const properties: Record<string, unknown> = { ...event.event_properties };
         for (const key of AMPLITUDE_CAMPAIGN_KEYS) delete properties[key];
+        // Page views record the full address bar, query included.
+        const location = properties[PAGE_LOCATION];
+        if (typeof location === "string") properties[PAGE_LOCATION] = pageUrlWithoutQuery(location);
         event.event_properties = { ...getAttributionParams(), ...properties };
         return event;
       },

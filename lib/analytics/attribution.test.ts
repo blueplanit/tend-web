@@ -160,6 +160,20 @@ describe("an untagged visit", () => {
     });
   });
 
+  // A subdomain can name a person, so an untagged referral records only the main domain.
+  it.each([
+    ["https://jo-smith.substack.com/p/debt", "substack.com"],
+    ["https://jsmith.github.io/", "github.io"],
+    ["https://news.ycombinator.com/item?id=1", "ycombinator.com"],
+    ["https://blog.example.co.uk/post", "example.co.uk"],
+    ["https://example.co.uk/", "example.co.uk"],
+    ["https://someblog.com/", "someblog.com"],
+  ])("from %s records only the main domain %s", (referrer, source) => {
+    const { fields } = visits({ path: "/", referrer });
+    expect(fields).toMatchObject({ first_source: source, first_medium: "referral" });
+    expect(JSON.stringify(fields)).not.toMatch(/jo-smith|jsmith/);
+  });
+
   it("does not count Instagram's fbclid as proof of a paid ad", () => {
     const { fields } = visits({ path: "/?fbclid=abc123", referrer: "https://l.instagram.com/" });
     expect(fields).toMatchObject({

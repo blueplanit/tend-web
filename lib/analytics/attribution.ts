@@ -177,7 +177,19 @@ function readReferrer(host: string): Signal | null {
   const rule = REFERRER_RULES.find((rule) => rule.host.test(host));
   if (rule) return { source: rule.source, medium: rule.medium, acquisition: rule.acquisition };
   // Another website can host a paid article with no tag, so a referral proves nothing.
-  return { source: host.replace(/^www\./, ""), medium: "referral", acquisition: UNKNOWN };
+  return { source: mainDomain(host), medium: "referral", acquisition: UNKNOWN };
+}
+
+// Second-level labels under a country domain, such as co.uk and com.au.
+const COUNTRY_SECOND_LEVELS = new Set(["co", "com", "org", "net", "ac", "gov", "edu"]);
+
+// The main domain of a host, such as substack.com for jo-smith.substack.com.
+// A subdomain can name a person, so it is never recorded.
+function mainDomain(host: string) {
+  const labels = host.split(".");
+  const [secondLevel, topLevel] = labels.slice(-2);
+  const countrySuffix = topLevel?.length === 2 && COUNTRY_SECOND_LEVELS.has(secondLevel);
+  return labels.slice(countrySuffix ? -3 : -2).join(".");
 }
 
 // The source of one page load. fromUrl is true when the URL itself carries the
