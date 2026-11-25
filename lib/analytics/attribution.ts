@@ -314,9 +314,14 @@ function readSignal(page: PageLoad): PageSignal | null {
   return referred && { signal: referred, fromOtherSite };
 }
 
+// A touch is known when a tag, a click ID or a referrer gave it a medium.
+export function isKnown(touch: Signal): boolean {
+  return touch.medium !== UNKNOWN;
+}
+
 // How much a touch tells us: 0 = unknown, 1 = an unlisted tag, 2 = a known source.
 function certainty(touch: Signal) {
-  if (touch.medium === UNKNOWN) return 0;
+  if (!isKnown(touch)) return 0;
   if (touch.source === UNLISTED || touch.medium === UNLISTED) return 1;
   return 2;
 }
@@ -372,8 +377,9 @@ function touchTags(touch: Signal): Record<string, string> {
   return tags;
 }
 
-// The four tags of a touch, each with a prefix, such as utm_source or first_source.
-export function prefixedTags(prefix: string, touch: Signal): Record<string, string> {
+// Up to four tags of a touch, each with a prefix, such as utm_source or first_source.
+// Campaign and content appear only when present.
+export function prefixedTags(prefix: "utm" | "first" | "latest", touch: Signal): Record<string, string> {
   const tags: Record<string, string> = {};
   for (const [key, value] of Object.entries(touchTags(touch))) tags[`${prefix}_${key}`] = value;
   return tags;

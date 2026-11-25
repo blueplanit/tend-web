@@ -43,19 +43,14 @@ export function BetaButtons({ location, tone = "light", comingSoonNotice }: Prop
           const className = `inline-flex min-h-12 cursor-pointer items-center justify-center gap-3 rounded-full px-6 py-3 text-base font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${buttonClass}`;
 
           if (link) {
-            // The href itself carries the source, so a link opened in a new tab or copied
-            // keeps it too. A long-press or a copied link sends no store_click.
-            const trackStoreClick = () =>
-              trackEvent(EVENTS.storeClicked, { platform: key, location });
+            // The href itself carries the source. So a link opened in a new tab keeps it.
+            // A copied link keeps it too. Only a click sends store_click.
             return (
               <a
                 key={key}
                 href={withStoreAttribution(link, key, attribution)}
                 className={className}
-                onClick={trackStoreClick}
-                onAuxClick={(event) => {
-                  if (event.button === 1) trackStoreClick(); // middle click
-                }}
+                onClick={() => trackEvent(EVENTS.storeClicked, { platform: key, location })}
               >
                 Join the {label}
               </a>
