@@ -40,6 +40,8 @@ const SOURCES = new Set([
   "gemini",
   "copilot",
   "claude",
+  // Email apps
+  "gmail",
   // Paid-article publishers and newsletters: add each before its link goes live.
 ]);
 
@@ -67,7 +69,8 @@ const AD_CLICK_IDS: { key: string; source: string; medium: string }[] = [
 // Search and AI answers count as unpaid, because their ads carry a click id.
 // A social site can host a paid post with no click id, so a social referrer proves nothing.
 const REFERRER_RULES: { source: string; medium: string; acquisition: Acquisition; host: RegExp }[] = [
-  { source: "chatgpt", medium: "ai-answer", acquisition: "unpaid", host: /(^|\.)(chatgpt\.com|chat\.openai\.com)$/ },
+  // Android apps send android-app://<package>/, so each rule also matches the app's package.
+  { source: "chatgpt", medium: "ai-answer", acquisition: "unpaid", host: /(^|\.)(chatgpt\.com|chat\.openai\.com)$|^com\.openai\.chatgpt$/ },
   { source: "perplexity", medium: "ai-answer", acquisition: "unpaid", host: /(^|\.)perplexity\.ai$/ },
   { source: "gemini", medium: "ai-answer", acquisition: "unpaid", host: /^gemini\.google\.com$/ },
   { source: "copilot", medium: "ai-answer", acquisition: "unpaid", host: /^copilot\.microsoft\.com$/ },
@@ -80,10 +83,12 @@ const REFERRER_RULES: { source: string; medium: string; acquisition: Acquisition
   { source: "yahoo", medium: "organic", acquisition: "unpaid", host: /(^|\.)search\.yahoo\.com$|^(www\.)?yahoo\.com$/ },
   { source: "ecosia", medium: "organic", acquisition: "unpaid", host: /(^|\.)ecosia\.org$/ },
   { source: "brave", medium: "organic", acquisition: "unpaid", host: /^search\.brave\.com$/ },
-  { source: "reddit", medium: "social", acquisition: "unknown", host: /(^|\.)reddit\.com$/ },
-  { source: "tiktok", medium: "social", acquisition: "unknown", host: /(^|\.)tiktok\.com$/ },
-  { source: "instagram", medium: "social", acquisition: "unknown", host: /(^|\.)instagram\.com$/ },
-  { source: "youtube", medium: "social", acquisition: "unknown", host: /(^|\.)(youtube\.com|youtu\.be)$/ },
+  { source: "reddit", medium: "social", acquisition: "unknown", host: /(^|\.)reddit\.com$|^com\.reddit\.frontpage$/ },
+  { source: "tiktok", medium: "social", acquisition: "unknown", host: /(^|\.)tiktok\.com$|^com\.zhiliaoapp\.musically$|^com\.ss\.android\.ugc\.trill$/ },
+  { source: "instagram", medium: "social", acquisition: "unknown", host: /(^|\.)instagram\.com$|^com\.instagram\.android$/ },
+  { source: "youtube", medium: "social", acquisition: "unknown", host: /(^|\.)(youtube\.com|youtu\.be)$|^com\.google\.android\.youtube$/ },
+  // A link in an email can come from our newsletter or from a person, so it proves nothing.
+  { source: "gmail", medium: "email", acquisition: "unknown", host: /^mail\.google\.com$|^com\.google\.android\.gm$/ },
 ];
 
 const touchSchema = z.object({
@@ -95,9 +100,14 @@ const touchSchema = z.object({
   landingPage: z.string().max(100),
 });
 
+// The sources that already counted, newest last. A tagged URL stays in the address
+// bar, so a visitor can reopen it from history or a bookmark. It must not count again.
+const SEEN_LIMIT = 20;
+
 const attributionSchema = z.object({
   first: touchSchema,
   latest: touchSchema,
+  seen: z.array(z.string().max(300)).max(SEEN_LIMIT),
 });
 
 // One acquisition: the source of one visit and the page it landed on.
@@ -169,10 +179,19 @@ function readSignal(page: PageLoad): Signal | null {
   if (referrerHost === url.hostname) return null; // internal navigation
 
   const tagged = readTags(url.searchParams);
-  if (tagged) return tagged;
+  // An ad click id proves a paid ad, so it wins over the URL tags. The tags still
+  // give the Campaign Code and the content id.
   const ad = AD_CLICK_IDS.find(({ key }) => url.searchParams.has(key));
-  if (ad) return { source: ad.source, medium: ad.medium, acquisition: "paid" };
-  return readReferrer(referrerHost);
+  if (ad) {
+    return {
+      source: ad.source,
+      medium: ad.medium,
+      campaign: tagged?.campaign,
+      content: tagged?.content,
+      acquisition: "paid",
+    };
+  }
+  return tagged ?? readReferrer(referrerHost);
 }
 
 // How much a touch tells us: 0 = unknown, 1 = an unlisted tag, 2 = a known source.
@@ -182,19 +201,14 @@ function certainty(touch: Signal) {
   return 2;
 }
 
-function sameSource(a: Signal, b: Signal) {
-  return (
-    a.source === b.source &&
-    a.medium === b.medium &&
-    a.campaign === b.campaign &&
-    a.content === b.content
-  );
+function sourceKey(signal: Signal) {
+  return [signal.source, signal.medium, signal.campaign ?? "", signal.content ?? ""].join("|");
 }
 
 // A touch never gives way to a less certain one. So an unknown visit or an unlisted
 // tag never replaces a known source, but an unlisted tag can fill an unknown view.
 // The first view changes only for a more certain touch.
-// The same source twice counts as one acquisition, so it keeps its first landing page.
+// A source that already counted never counts again, so it keeps its first landing page.
 function nextAttribution(
   previous: Attribution | null,
   signal: Signal | null,
@@ -203,16 +217,18 @@ function nextAttribution(
   if (!signal) {
     if (previous) return previous;
     const unknown: Touch = { source: UNKNOWN, medium: UNKNOWN, acquisition: UNKNOWN, landingPage };
-    return { first: unknown, latest: unknown };
+    return { first: unknown, latest: unknown, seen: [] };
   }
   const touch: Touch = { ...signal, landingPage };
-  if (!previous) return { first: touch, latest: touch };
+  const key = sourceKey(signal);
+  if (!previous) return { first: touch, latest: touch, seen: [key] };
+  if (previous.seen.includes(key)) return previous;
 
-  const keepLatest =
-    certainty(touch) < certainty(previous.latest) || sameSource(previous.latest, touch);
+  const newLatest = certainty(touch) >= certainty(previous.latest);
   return {
     first: certainty(touch) > certainty(previous.first) ? touch : previous.first,
-    latest: keepLatest ? previous.latest : touch,
+    latest: newLatest ? touch : previous.latest,
+    seen: newLatest ? [...previous.seen, key].slice(-SEEN_LIMIT) : previous.seen,
   };
 }
 

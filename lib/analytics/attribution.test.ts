@@ -99,6 +99,15 @@ describe("an untagged visit", () => {
     ["https://l.instagram.com/", "instagram", "social", "unknown"],
     ["https://m.youtube.com/", "youtube", "social", "unknown"],
     ["https://www.someblog.com/post/123?ref=abc", "someblog.com", "referral", "unknown"],
+    // Android apps send android-app://<package>/ as the referrer.
+    ["android-app://com.reddit.frontpage/", "reddit", "social", "unknown"],
+    ["android-app://com.zhiliaoapp.musically/", "tiktok", "social", "unknown"],
+    ["android-app://com.ss.android.ugc.trill/", "tiktok", "social", "unknown"],
+    ["android-app://com.instagram.android/", "instagram", "social", "unknown"],
+    ["android-app://com.google.android.youtube/", "youtube", "social", "unknown"],
+    ["android-app://com.openai.chatgpt/", "chatgpt", "ai-answer", "unpaid"],
+    ["android-app://com.google.android.gm/", "gmail", "email", "unknown"],
+    ["https://mail.google.com/", "gmail", "email", "unknown"],
   ])("from %s records %s / %s as %s", (referrer, source, medium, acquisition) => {
     const { fields } = visits({ path: "/", referrer });
     expect(fields).toMatchObject({
@@ -122,6 +131,19 @@ describe("an untagged visit", () => {
       first_acquisition: "paid",
     });
     expect(JSON.stringify(fields)).not.toContain("abc123");
+  });
+
+  it("lets an ad click id prove a paid ad when the URL tags disagree", () => {
+    const { fields } = visits({
+      path: "/?utm_source=google&utm_medium=paid&utm_campaign=pa002&utm_content=pa002-comic&gclid=abc123",
+    });
+    expect(fields).toMatchObject({
+      first_source: "google",
+      first_medium: "cpc",
+      first_campaign: "pa002",
+      first_content: "pa002-comic",
+      first_acquisition: "paid",
+    });
   });
 
   it("does not count Instagram's fbclid as proof of a paid ad", () => {
@@ -234,6 +256,22 @@ describe("later page loads", () => {
       latest_landing_page: "/blog/interest",
     });
     expect(fields).not.toHaveProperty("latest_content");
+  });
+
+  it("do not count an old acquisition again when its tagged URL is reopened", () => {
+    const fromRedditAd = { path: "/?utm_source=reddit&utm_medium=paid-social&utm_campaign=pa002" };
+    const { fields, changed } = visits(
+      fromRedditAd,
+      { path: "/", referrer: "https://www.google.com/" },
+      fromRedditAd, // from history or a bookmark, with no referrer
+    );
+    expect(fields).toMatchObject({
+      first_source: "reddit",
+      first_campaign: "pa002",
+      latest_source: "google",
+      latest_medium: "organic",
+    });
+    expect(changed).toBe(false);
   });
 
   it("replace an unlisted tag with the first known source", () => {

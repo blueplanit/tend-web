@@ -8,6 +8,32 @@ const AMPLITUDE_API_KEY = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
 
 let initialized = false;
 
+// Amplitude's page view plugin adds these campaign values to each page view, even
+// with attribution capture off. They hold raw tags, click ids and the full referrer
+// URL, which can carry personal information. ./attribution.ts is the one definition.
+// The list matches BASE_CAMPAIGN in @amplitude/analytics-core. Check it after an upgrade.
+const AMPLITUDE_CAMPAIGN_KEYS = [
+  "utm_campaign",
+  "utm_content",
+  "utm_id",
+  "utm_medium",
+  "utm_source",
+  "utm_term",
+  "referrer",
+  "referring_domain",
+  "dclid",
+  "gbraid",
+  "gclid",
+  "fbclid",
+  "ko_click_id",
+  "li_fat_id",
+  "msclkid",
+  "rdt_cid",
+  "ttclid",
+  "twclid",
+  "wbraid",
+];
+
 // Analytics must never break the page it measures.
 function safely(operation: string, fn: () => void) {
   try {
@@ -23,13 +49,16 @@ export function initAmplitude() {
   if (initialized || !AMPLITUDE_API_KEY || !ANALYTICS_ENABLED) return;
 
   safely("init", () => {
-    // Adds the attribution fields to every event, including page views.
+    // Adds the attribution fields to every event, including page views. It also
+    // removes the raw campaign values that Amplitude's page views add by themselves.
     amplitude.add({
       name: "tend-attribution",
       type: "enrichment",
       execute: async (event) => {
         if (event.event_type.startsWith("$")) return event; // identify and group calls
-        event.event_properties = { ...getAttributionParams(), ...event.event_properties };
+        const properties: Record<string, unknown> = { ...event.event_properties };
+        for (const key of AMPLITUDE_CAMPAIGN_KEYS) delete properties[key];
+        event.event_properties = { ...getAttributionParams(), ...properties };
         return event;
       },
     });
