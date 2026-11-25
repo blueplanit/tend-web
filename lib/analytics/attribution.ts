@@ -81,17 +81,18 @@ const AD_CLICK_IDS: { key: string; source: string; medium: Medium }[] = [
 // keeps it.
 const STORE_HOSTS = /^(play\.google\.com|testflight\.apple\.com|apps\.apple\.com)$/;
 
-// Referrer hosts, checked in this order. The AI assistants go first, because
+// Referrer hosts, checked in this order. url-tags.md holds the same table, so change both.
+// The AI assistants go first, because
 // gemini.google.com would otherwise match Google search.
 // Search and AI answers count as unpaid, because their ads carry a click ID.
 // A social site or an email can carry a paid post with no click ID, so it proves nothing.
 // Android apps send android-app://<package>/, so a rule also matches the app's package.
 const REFERRER_RULES: { source: string; medium: Medium; paidStatus: PaidStatus; host: RegExp }[] = [
   { source: "chatgpt", medium: "ai-answer", paidStatus: "unpaid", host: /(^|\.)(chatgpt\.com|chat\.openai\.com)$|^com\.openai\.chatgpt$/ },
-  { source: "perplexity", medium: "ai-answer", paidStatus: "unpaid", host: /(^|\.)perplexity\.ai$/ },
-  { source: "gemini", medium: "ai-answer", paidStatus: "unpaid", host: /^gemini\.google\.com$/ },
-  { source: "copilot", medium: "ai-answer", paidStatus: "unpaid", host: /^copilot\.microsoft\.com$/ },
-  { source: "claude", medium: "ai-answer", paidStatus: "unpaid", host: /^claude\.ai$/ },
+  { source: "perplexity", medium: "ai-answer", paidStatus: "unpaid", host: /(^|\.)perplexity\.ai$|^ai\.perplexity\.app\.android$/ },
+  { source: "gemini", medium: "ai-answer", paidStatus: "unpaid", host: /^gemini\.google\.com$|^com\.google\.android\.apps\.bard$/ },
+  { source: "copilot", medium: "ai-answer", paidStatus: "unpaid", host: /^copilot\.microsoft\.com$|^com\.microsoft\.copilot$/ },
+  { source: "claude", medium: "ai-answer", paidStatus: "unpaid", host: /^claude\.ai$|^com\.anthropic\.claude$/ },
   { source: "google", medium: "organic", paidStatus: "unpaid", host: /^(www\.)?google\.[a-z]{2,3}(\.[a-z]{2})?$|^com\.google\.android\.googlequicksearchbox$/ },
   { source: "bing", medium: "organic", paidStatus: "unpaid", host: /(^|\.)bing\.com$/ },
   { source: "duckduckgo", medium: "organic", paidStatus: "unpaid", host: /(^|\.)duckduckgo\.com$/ },
@@ -227,14 +228,18 @@ function readReferrer(referrer: string): Signal | null {
 }
 
 // The referrer that GA4 may record, or "" for none. GA4 reads it for its own reports.
-// A host on the reviewed list names a site or an app, never a person, so it stays.
-// Any other host gives its main domain only, as the source does.
+// - A full page load from our own site gives the page origin.
+// - A host that a referrer rule matches stays as it is.
+// - A host under a domain that a rule matches also stays, such as docs.google.com.
+//   Its main domain alone would read as search in GA4.
+// - Any other host gives its main domain only, as the source does. A subdomain can name a person.
 export function referrerForGa(referrer: string, pageHref: string): string {
   const from = referrerHost(referrer);
   if (!from) return "";
   if (sameSite(from.host, hostOf(pageHref))) return new URL(pageHref).origin;
-  if (ruleFor(from.host)) return from.app ? `android-app://${from.host}` : from.origin;
-  return `https://${otherDomain(from)}`;
+  const domain = otherDomain(from);
+  if (ruleFor(from.host) || ruleFor(domain)) return from.app ? `android-app://${from.host}` : from.origin;
+  return `https://${domain}`;
 }
 
 function hostOf(href: string) {

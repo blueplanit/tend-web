@@ -127,6 +127,10 @@ describe("an untagged visit", () => {
     ["android-app://com.instagram.android/", "instagram", "social", "unknown"],
     ["android-app://com.google.android.youtube/", "youtube", "social", "unknown"],
     ["android-app://com.openai.chatgpt/", "chatgpt", "ai-answer", "unpaid"],
+    ["android-app://ai.perplexity.app.android/", "perplexity", "ai-answer", "unpaid"],
+    ["android-app://com.google.android.apps.bard/", "gemini", "ai-answer", "unpaid"],
+    ["android-app://com.anthropic.claude/", "claude", "ai-answer", "unpaid"],
+    ["android-app://com.microsoft.copilot/", "copilot", "ai-answer", "unpaid"],
     ["android-app://com.google.android.gm/", "gmail", "email", "unknown"],
     ["https://mail.google.com/", "gmail", "email", "unknown"],
     // Another Android app: the package name read backwards is its domain.
@@ -458,6 +462,15 @@ describe("the referrer that GA4 records", () => {
     expect(referrerForGa("https://www.google.com/search?q=jo+smith", page)).toBe("https://www.google.com");
     expect(referrerForGa("https://gemini.google.com/app", page)).toBe("https://gemini.google.com");
     expect(referrerForGa("https://mail.google.com/mail/u/0/", page)).toBe("https://mail.google.com");
+  });
+
+  it("keeps a subdomain of a reviewed domain, so GA4 does not read it as search", () => {
+    expect(referrerForGa("https://docs.google.com/document/d/x", page)).toBe("https://docs.google.com");
+    expect(referrerForGa("https://news.google.com/articles/x", page)).toBe("https://news.google.com");
+    expect(referrerForGa("https://mail.yahoo.com/d/folders/1", page)).toBe("https://mail.yahoo.com");
+    expect(referrerForGa("android-app://com.yahoo.mobile.client.android.mail/", page)).toBe(
+      "android-app://com.yahoo.mobile.client.android.mail",
+    );
   });
 
   it("names an Android app on the reviewed list by its package", () => {
