@@ -1,5 +1,6 @@
 "use client";
 
+import { referrerForGa } from "./attribution";
 import { getAttributionParams } from "./attribution-store";
 import { pageLocationForGa } from "./page-url";
 import { safely } from "./safely";
@@ -34,15 +35,6 @@ export function initGa(measurementId: string, debug: boolean) {
   });
 }
 
-// The referrer's origin only. Its path and query can carry personal information.
-function referrerOrigin() {
-  try {
-    return document.referrer ? new URL(document.referrer).origin : "";
-  } catch {
-    return "";
-  }
-}
-
 // Sends one page view with a clean page location and referrer. Every later event on
 // the page reuses them. GA4's enhanced measurement setting "Page changes based on
 // browser history events" must be off, or GA4 counts in-app page changes twice.
@@ -53,7 +45,9 @@ export function trackGaPageView() {
   safely("GA4 page view", () => {
     const location = pageLocationForGa(window.location.href);
     if (location === previousLocation) return;
-    window.gtag?.("set", { page_location: location, page_referrer: previousLocation ?? referrerOrigin() });
+    // After a page change inside the site, the referrer is the previous clean page location.
+    const referrer = previousLocation ?? referrerForGa(document.referrer, window.location.href);
+    window.gtag?.("set", { page_location: location, page_referrer: referrer });
     window.gtag?.("event", "page_view");
     previousLocation = location;
   });

@@ -77,7 +77,8 @@ const AD_CLICK_IDS: { key: string; source: string; medium: Medium }[] = [
 ];
 
 // The pages that the store buttons open. A visit from them is a return from a store
-// click, so it keeps the earlier source. A link on Tend's store listing also keeps it.
+// click, so it keeps the earlier source. An untagged link on Tend's store listing also
+// keeps it.
 const STORE_HOSTS = /^(play\.google\.com|testflight\.apple\.com|apps\.apple\.com)$/;
 
 // Referrer hosts, checked in this order. The AI assistants go first, because
@@ -190,8 +191,11 @@ function readTags(params: URLSearchParams): Signal | null {
   };
 }
 
+type ReferrerHost = { host: string; app: boolean; origin: string };
+
 // Only the host of a referrer is read. Its path and query can hold personal information.
-function readReferrer(referrer: string): Signal | null {
+// A store page gives none: a visitor who comes back from it is a return, not a new source.
+function referrerHost(referrer: string): ReferrerHost | null {
   let url: URL;
   try {
     url = new URL(referrer);
@@ -199,14 +203,38 @@ function readReferrer(referrer: string): Signal | null {
     return null;
   }
   const host = url.hostname.toLowerCase();
-  // A visitor who comes back from the store page is a return, not a new source.
   if (!host || STORE_HOSTS.test(host)) return null;
-  const rule = REFERRER_RULES.find((rule) => rule.host.test(host));
+  return { host, app: url.protocol === "android-app:", origin: url.origin };
+}
+
+function ruleFor(host: string) {
+  return REFERRER_RULES.find((rule) => rule.host.test(host));
+}
+
+// The main domain of a site or app off the reviewed list. An Android app's package
+// name read backwards is its domain.
+function otherDomain({ host, app }: ReferrerHost) {
+  return mainDomain(app ? host.split(".").reverse().join(".") : host);
+}
+
+function readReferrer(referrer: string): Signal | null {
+  const from = referrerHost(referrer);
+  if (!from) return null;
+  const rule = ruleFor(from.host);
   if (rule) return { source: rule.source, medium: rule.medium, paidStatus: rule.paidStatus };
-  // Another Android app: its package name read backwards is its domain.
-  const domain = url.protocol === "android-app:" ? host.split(".").reverse().join(".") : host;
   // Another website can host a paid article with no tag, so a referral proves nothing.
-  return { source: mainDomain(domain), medium: "referral", paidStatus: UNKNOWN };
+  return { source: otherDomain(from), medium: "referral", paidStatus: UNKNOWN };
+}
+
+// The referrer that GA4 may record, or "" for none. GA4 reads it for its own reports.
+// A host on the reviewed list names a site or an app, never a person, so it stays.
+// Any other host gives its main domain only, as the source does.
+export function referrerForGa(referrer: string, pageHref: string): string {
+  const from = referrerHost(referrer);
+  if (!from) return "";
+  if (sameSite(from.host, hostOf(pageHref))) return new URL(pageHref).origin;
+  if (ruleFor(from.host)) return from.app ? `android-app://${from.host}` : from.origin;
+  return `https://${otherDomain(from)}`;
 }
 
 function hostOf(href: string) {

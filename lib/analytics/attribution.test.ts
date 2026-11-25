@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { attributionParams, captureAttribution, type PageLoad } from "./attribution";
+import { attributionParams, captureAttribution, referrerForGa, type PageLoad } from "./attribution";
 
 const SITE = "https://tend.example";
 
@@ -444,5 +444,40 @@ describe("later page loads", () => {
       first_landing_page: "/blog/interest",
       latest_source: "bing",
     });
+  });
+});
+
+describe("the referrer that GA4 records", () => {
+  const page = SITE + "/";
+
+  it("keeps only the main domain of another site, because a subdomain can name a person", () => {
+    expect(referrerForGa("https://jo-smith.substack.com/p/debt", page)).toBe("https://substack.com");
+  });
+
+  it("keeps a host from the reviewed list, so GA4 still tells search, AI and email apart", () => {
+    expect(referrerForGa("https://www.google.com/search?q=jo+smith", page)).toBe("https://www.google.com");
+    expect(referrerForGa("https://gemini.google.com/app", page)).toBe("https://gemini.google.com");
+    expect(referrerForGa("https://mail.google.com/mail/u/0/", page)).toBe("https://mail.google.com");
+  });
+
+  it("names an Android app on the reviewed list by its package", () => {
+    expect(referrerForGa("android-app://com.reddit.frontpage/", page)).toBe("android-app://com.reddit.frontpage");
+  });
+
+  it("gives another Android app as its main domain", () => {
+    expect(referrerForGa("android-app://org.telegram.messenger/", page)).toBe("https://telegram.org");
+  });
+
+  it("gives no referrer for a return from a store page", () => {
+    expect(referrerForGa("https://play.google.com/store/apps/details?id=app.tend", page)).toBe("");
+  });
+
+  it("gives the page origin for our own site, the www host included", () => {
+    expect(referrerForGa("https://www.tend.example/blog/x?email=jo%40example.com", page)).toBe(SITE);
+  });
+
+  it("gives no referrer when there is none or it is not a URL", () => {
+    expect(referrerForGa("", page)).toBe("");
+    expect(referrerForGa("not a url", page)).toBe("");
   });
 });
