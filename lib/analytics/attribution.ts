@@ -64,6 +64,10 @@ const AD_CLICK_IDS: { key: string; source: string; medium: string }[] = [
   { key: "rdt_cid", source: "reddit", medium: "paid-social" },
 ];
 
+// The pages that the store buttons open. A visit from them is a return from a store
+// click, so it keeps the earlier source. A link on Tend's store listing also keeps it.
+const STORE_HOSTS = /^(play\.google\.com|testflight\.apple\.com|apps\.apple\.com)$/;
+
 // Referrer hosts, checked in this order. The AI assistants go first, because
 // gemini.google.com would otherwise match Google search.
 // Search and AI answers count as unpaid, because their ads carry a click id.
@@ -144,11 +148,15 @@ function readTags(params: URLSearchParams): Signal | null {
 
   const listed = (value: string) =>
     SOURCES.has(value) || (medium === "referral" && DOMAIN.test(value));
-  const listedMedium = medium && MEDIA.has(medium) ? medium : undefined;
+  // organic comes from the referrer only. url-tags.md: "Never a hand tag".
+  const listedMedium = medium && MEDIA.has(medium) && medium !== "organic" ? medium : undefined;
+  // A Campaign is paid only, so a Campaign Code on an unpaid medium is a tag error.
+  const unpaidMedium = listedMedium && !PAID_MEDIA.has(listedMedium);
   return {
     source: source && listed(source) ? source : UNLISTED,
     medium: listedMedium ?? UNLISTED,
-    campaign: campaign && (CAMPAIGN_CODE.test(campaign) ? campaign : UNLISTED),
+    campaign:
+      campaign && (CAMPAIGN_CODE.test(campaign) && !unpaidMedium ? campaign : UNLISTED),
     content: content && (CONTENT_ID.test(content) ? content : UNLISTED),
     acquisition: !listedMedium ? UNKNOWN : PAID_MEDIA.has(listedMedium) ? "paid" : "unpaid",
   };
@@ -164,15 +172,20 @@ function hostOf(href: string) {
 
 // Only the host of a referrer is read. Its path and query can hold personal information.
 function readReferrer(host: string): Signal | null {
-  if (!host) return null;
+  // A visitor who comes back from the store page is a return, not a new source.
+  if (!host || STORE_HOSTS.test(host)) return null;
   const rule = REFERRER_RULES.find((rule) => rule.host.test(host));
   if (rule) return { source: rule.source, medium: rule.medium, acquisition: rule.acquisition };
   // Another website can host a paid article with no tag, so a referral proves nothing.
   return { source: host.replace(/^www\./, ""), medium: "referral", acquisition: UNKNOWN };
 }
 
+// The source of one page load. fromUrl is true when the URL itself carries the
+// source, as tags or an ad click id. A visitor can reopen such a URL later.
+type PageSignal = { signal: Signal; fromUrl: boolean };
+
 // Reads the source of one full page load, or null when it carries none.
-function readSignal(page: PageLoad): Signal | null {
+function readSignal(page: PageLoad): PageSignal | null {
   if (page.navigationType === "reload" || page.navigationType === "back_forward") return null;
   const url = new URL(page.href);
   const referrerHost = hostOf(page.referrer);
@@ -183,15 +196,18 @@ function readSignal(page: PageLoad): Signal | null {
   // give the Campaign Code and the content id.
   const ad = AD_CLICK_IDS.find(({ key }) => url.searchParams.has(key));
   if (ad) {
-    return {
+    const signal: Signal = {
       source: ad.source,
       medium: ad.medium,
       campaign: tagged?.campaign,
       content: tagged?.content,
       acquisition: "paid",
     };
+    return { signal, fromUrl: true };
   }
-  return tagged ?? readReferrer(referrerHost);
+  if (tagged) return { signal: tagged, fromUrl: true };
+  const referred = readReferrer(referrerHost);
+  return referred && { signal: referred, fromUrl: false };
 }
 
 // How much a touch tells us: 0 = unknown, 1 = an unlisted tag, 2 = a known source.
@@ -206,29 +222,34 @@ function sourceKey(signal: Signal) {
 }
 
 // A touch never gives way to a less certain one. So an unknown visit or an unlisted
-// tag never replaces a known source, but an unlisted tag can fill an unknown view.
-// The first view changes only for a more certain touch.
-// A source that already counted never counts again, so it keeps its first landing page.
+// tag never replaces a known source, but an unlisted tag can fill an unknown touch.
+// The first touch changes only for a more certain touch.
+// The same source as the latest one counts once, so it keeps its first landing page.
+// A tagged URL that already counted never counts again, because a visitor can reopen
+// it from history or a bookmark. An untagged source can count again on a real return.
 function nextAttribution(
   previous: Attribution | null,
-  signal: Signal | null,
+  read: PageSignal | null,
   landingPage: string,
 ): Attribution {
-  if (!signal) {
+  if (!read) {
     if (previous) return previous;
     const unknown: Touch = { source: UNKNOWN, medium: UNKNOWN, acquisition: UNKNOWN, landingPage };
     return { first: unknown, latest: unknown, seen: [] };
   }
+  const { signal, fromUrl } = read;
   const touch: Touch = { ...signal, landingPage };
   const key = sourceKey(signal);
-  if (!previous) return { first: touch, latest: touch, seen: [key] };
-  if (previous.seen.includes(key)) return previous;
+  if (!previous) return { first: touch, latest: touch, seen: fromUrl ? [key] : [] };
+  if (key === sourceKey(previous.latest)) return previous;
+  if (fromUrl && previous.seen.includes(key)) return previous;
 
   const newLatest = certainty(touch) >= certainty(previous.latest);
+  const remember = newLatest && fromUrl;
   return {
     first: certainty(touch) > certainty(previous.first) ? touch : previous.first,
     latest: newLatest ? touch : previous.latest,
-    seen: newLatest ? [...previous.seen, key].slice(-SEEN_LIMIT) : previous.seen,
+    seen: remember ? [...previous.seen, key].slice(-SEEN_LIMIT) : previous.seen,
   };
 }
 

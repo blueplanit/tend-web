@@ -70,6 +70,20 @@ describe("a first visit", () => {
     expect(fields).toMatchObject({ first_source: "unlisted", first_medium: "unlisted" });
   });
 
+  it("records a Campaign Code on unpaid traffic as unlisted, because a Campaign is paid only", () => {
+    const { fields } = visits({ path: "/?utm_source=reddit&utm_medium=social&utm_campaign=pa002" });
+    expect(fields).toMatchObject({
+      first_source: "reddit",
+      first_medium: "social",
+      first_campaign: "unlisted",
+    });
+  });
+
+  it("records a hand-tagged organic medium as unlisted, because only the referrer sets it", () => {
+    const { fields } = visits({ path: "/?utm_source=google&utm_medium=organic" });
+    expect(fields).toMatchObject({ first_medium: "unlisted", first_acquisition: "unknown" });
+  });
+
   it("accepts any domain as the source of a tagged referral", () => {
     const { fields } = visits({ path: "/?utm_source=example.com&utm_medium=referral" });
     expect(fields).toMatchObject({
@@ -271,6 +285,30 @@ describe("later page loads", () => {
       latest_source: "google",
       latest_medium: "organic",
     });
+    expect(changed).toBe(false);
+  });
+
+  it("let an earlier untagged source become the latest source again", () => {
+    const { fields } = visits(
+      { path: "/", referrer: "https://www.google.com/" },
+      { path: "/", referrer: "https://www.reddit.com/" },
+      { path: "/blog/x", referrer: "https://www.google.com/" },
+    );
+    expect(fields).toMatchObject({
+      first_source: "google",
+      latest_source: "google",
+      latest_medium: "organic",
+      latest_landing_page: "/blog/x",
+    });
+  });
+
+  it.each([
+    "https://play.google.com/store/apps/details?id=com.blueplanit.tend",
+    "https://testflight.apple.com/join/abc",
+    "https://apps.apple.com/app/tend/id123",
+  ])("keep the source on a return from the store at %s", (referrer) => {
+    const { fields, changed } = visits(fromTikTok, { path: "/", referrer });
+    expect(fields).toMatchObject(tikTokFields);
     expect(changed).toBe(false);
   });
 

@@ -67,6 +67,10 @@ export function initAmplitude() {
         pageViews: true,
         // Off: ./attribution.ts holds the one attribution definition for every tool.
         attribution: false,
+        // Off: it adds "[Amplitude] Previous Page Location" to every event. That holds
+        // the full referrer URL, whose path and query can carry personal information.
+        // Amplitude adds it during init, so it can run after our plugin and add the value back.
+        pageUrlEnrichment: false,
         sessions: true,
         formInteractions: false,
         fileDownloads: false,
