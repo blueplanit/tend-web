@@ -2,6 +2,7 @@
 
 import * as amplitude from "@amplitude/analytics-browser";
 import { ANALYTICS_ENABLED } from "@/lib/site";
+import { getAttributionParams } from "./attribution-store";
 
 const AMPLITUDE_API_KEY = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
 
@@ -22,11 +23,21 @@ export function initAmplitude() {
   if (initialized || !AMPLITUDE_API_KEY || !ANALYTICS_ENABLED) return;
 
   safely("init", () => {
+    // Adds the attribution fields to every event, including page views.
+    amplitude.add({
+      name: "tend-attribution",
+      type: "enrichment",
+      execute: async (event) => {
+        if (event.event_type.startsWith("$")) return event; // identify and group calls
+        event.event_properties = { ...getAttributionParams(), ...event.event_properties };
+        return event;
+      },
+    });
     amplitude.init(AMPLITUDE_API_KEY, {
       autocapture: {
         pageViews: true,
-        // Captures utm_*, the referrer and click ids at session start.
-        attribution: true,
+        // Off: ./attribution.ts holds the one attribution definition for every tool.
+        attribution: false,
         sessions: true,
         formInteractions: false,
         fileDownloads: false,

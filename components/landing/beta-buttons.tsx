@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { EVENTS, trackEvent } from "@/lib/analytics/events";
+import { getAttribution } from "@/lib/analytics/attribution-store";
 import { withStoreAttribution } from "@/lib/analytics/store-attribution";
 import { BETA_LINKS, type BetaPlatform } from "@/lib/site";
 
@@ -16,8 +17,9 @@ type Props = {
   comingSoonNotice: string;
 };
 
-// Before a beta link exists, the button still counts clicks. That measures
-// demand for each platform before the beta opens.
+// Before a beta link exists, the button still counts clicks as beta_button_click.
+// That measures demand for each platform before the beta opens. A click on a real
+// link counts as store_click instead, so the two never mix.
 export function BetaButtons({ location, tone = "light", comingSoonNotice }: Props) {
   const [showNotice, setShowNotice] = useState(false);
 
@@ -42,15 +44,11 @@ export function BetaButtons({ location, tone = "light", comingSoonNotice }: Prop
                 href={link}
                 className={className}
                 onClick={(event) => {
-                  trackEvent(EVENTS.betaButtonClicked, {
-                    platform: key,
-                    location,
-                    available: true,
-                  });
+                  trackEvent(EVENTS.storeClicked, { platform: key, location });
                   event.currentTarget.href = withStoreAttribution(
                     link,
                     key,
-                    window.location.search,
+                    getAttribution(),
                   );
                 }}
               >
