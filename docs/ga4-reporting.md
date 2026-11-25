@@ -17,7 +17,9 @@ A Founder does these steps.
    `NEXT_PUBLIC_GA_MEASUREMENT_ID` must match the measurement ID of the web stream, in Admin > Data streams. A wrong ID sends the events to another property.
 2. **Turn off one page view setting.** Go to Admin > Data streams > the web stream > Enhanced measurement > Page views > Show advanced settings. Turn off "Page changes based on browser history events". The website sends its own `page_view` for each page change. With the setting on, GA4 counts each page change twice.
 3. **Register the custom dimensions.** Go to Admin > Data display > Custom definitions > Create custom dimension. Set the scope to Event. Use the event parameter name as the dimension name. Register all 17 parameters in the table below.
-4. **Filter out local test traffic.** Go to Admin > Data filters > Create filter > Developer traffic. Set the filter to Active. A local test with `NEXT_PUBLIC_ANALYTICS_LOCAL=true` sends events to the same property in debug mode. This filter removes them from reports.
+4. **Keep local test traffic out of the reports.** A local test with `NEXT_PUBLIC_ANALYTICS_LOCAL=true` sends events to GA4 and Amplitude.
+   - **GA4:** Go to Admin > Data filters > Create filter > Developer traffic. Set the filter to Active. Local tests send GA4 events in debug mode. This filter removes them.
+   - **Amplitude:** Amplitude has no debug filter. In `.env.local`, set `NEXT_PUBLIC_AMPLITUDE_API_KEY` to the key of a separate test project. An empty key turns Amplitude off for local tests.
 5. **Check delivery.** Open the production site. In GA4, open Reports > Realtime and look for `page_view`. Click a beta button. A button with a store link sends `store_click`. A "Coming soon" button sends `beta_button_click`. In Amplitude, look for the same events under their Amplitude names.
 
 Do step 3 before launch. A new custom dimension shows data 24 to 48 hours after you create it. Google does not say that it shows events sent before you created it. So treat events before that date as missing from these dimensions.
@@ -55,6 +57,16 @@ Do not filter any report by hostname. The website moves to a permanent domain la
 
 Use the built-in report: Reports > Engagement > Landing page. Add the secondary dimension "Session source / medium". The metric is Sessions.
 These are GA4's own definitions. [Read the numbers](#read-the-numbers) says how they differ from the touch fields.
+
+### Page views by touch
+
+This report uses our Source, not GA4 session source. Make a free-form exploration: Explore > Free form.
+
+- **Rows:** `latest_landing_page`, `latest_source` and `latest_medium`.
+- **Values:** Event count.
+- **Filter:** Event name exactly matches `page_view`.
+
+It counts page views, not sessions. One visit to three pages counts three times.
 
 ### Store clicks by touch
 
@@ -104,8 +116,8 @@ GA4 enhanced measurement also sends a `click` event with `outbound` = `true` for
 
 ## Previews and local runs
 
-- Previews and local runs send no analytics. The website loads GA4 only when `VERCEL_ENV` is `production`. A local test with `NEXT_PUBLIC_ANALYTICS_LOCAL=true` is the one exception. Step 4 filters it out.
-- Each preview page carries a `noindex` tag. Their robots.txt allows crawling, so a crawler can read the tag.
+- Previews and local runs send no analytics. The website loads GA4 and Amplitude only when `VERCEL_ENV` is `production`. A local test with `NEXT_PUBLIC_ANALYTICS_LOCAL=true` is the one exception. Step 4 keeps it out of the reports.
+- Each page on a preview or a local run carries a `noindex` tag. The robots.txt of a preview or a local run allows crawling. A crawler can then read the tag.
 - Vercel Deployment Protection sends a visitor to a preview to the Vercel login. Vercel also sends `x-robots-tag: noindex` on previews. Keep Deployment Protection on.
 
 ## When the permanent domain arrives

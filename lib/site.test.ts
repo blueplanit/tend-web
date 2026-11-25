@@ -1,14 +1,10 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { importWithEnv } from "./test-utils/import-with-env";
 import { DEFAULT_SITE_URL } from "./site";
 
 async function siteUrlFor(value: string) {
   return (await importWithEnv({ NEXT_PUBLIC_SITE_URL: value }, () => import("./site"))).SITE_URL;
 }
-
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
 
 describe("SITE_URL", () => {
   it("uses the Vercel URL when the variable is empty", async () => {

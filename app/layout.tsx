@@ -33,8 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
     // the homepage shows content="default". See docs/adr/0001, Consequences.
     other: { "tend-copy-source": source },
     title: { default: meta.title, template: `%s | ${SITE_NAME}` },
-    // Only site-wide fields go here. Each page inherits every field that it does not set.
-    // So each page sets its own description, canonical URL and Open Graph fields.
+    // Only site-wide fields go here. lib/metadata.ts says why.
     applicationName: SITE_NAME,
     robots: NON_PRODUCTION_NOINDEX,
     openGraph: SHARED_OPEN_GRAPH,

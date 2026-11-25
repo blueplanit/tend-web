@@ -7,5 +7,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // Each test starts with the real environment. A test that stubs a variable cannot leak it.
+    unstubEnvs: true,
   },
 });

@@ -1,12 +1,9 @@
-import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
 import { getLandingCopy } from "@/lib/landing-copy";
-import { getLegalDocument } from "@/lib/legal-documents";
-import { pageMetadata } from "@/lib/metadata";
+import { getLegalDocument, legalPageMetadata } from "@/lib/legal-documents";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const { title, description } = await getLegalDocument("privacy");
-  return { title, ...pageMetadata({ path: "/privacy", title, description }) };
+export function generateMetadata() {
+  return legalPageMetadata("privacy");
 }
 
 export default async function PrivacyPage() {
