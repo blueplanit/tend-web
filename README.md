@@ -2,7 +2,7 @@
 
 The landing page for Tend, a Blue Planit LLC app. Jira story: BP-1351.
 
-Marketing rules, terms and the brand kit live in the `tend-marketing` repo.
+[CONTEXT.md](CONTEXT.md) holds the terms. [docs/url-tags.md](docs/url-tags.md) holds the URL tags for links to the website.
 
 ## Run
 
@@ -25,7 +25,7 @@ npm test         # Vitest
 | `contentful/` | Content model migrations and the seed script |
 | `lib/site.ts` | Site URL, feedback email and the beta install links |
 | `components/landing/` | Page sections and the beta buttons |
-| `lib/analytics/` | Amplitude, GA4 and UTM pass-through to Google Play |
+| `lib/analytics/` | Amplitude, GA4, and the touches that the store links carry |
 | `components/structured-data.tsx` | JSON-LD for search engines and AI assistants |
 | `app/robots.ts`, `app/sitemap.ts`, `app/opengraph-image.tsx` | SEO files |
 | `public/pippy/`, `public/app-screens/` | Brand kit assets. Give a changed image a new path, so no cache serves the old one. |
@@ -49,7 +49,9 @@ Analytics and site URL, in Vercel. Each one is optional. A missing key turns its
 | `NEXT_PUBLIC_AMPLITUDE_API_KEY` | Amplitude project key |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | GA4 measurement ID, `G-…` |
 | `NEXT_PUBLIC_SITE_URL` | The final domain. The default is the Vercel URL. |
-| `NEXT_PUBLIC_ANDROID_STORE_URL` | The Google Play store listing, `https://play.google.com/store/apps/details?id=com.blueplanit.tend`. Without it, the Android button shows "Coming soon". |
+| `NEXT_PUBLIC_ANDROID_STORE_URL` | The Android store link. See [Store links](#store-links). Without it, the Android button shows "Coming soon". |
+| `NEXT_PUBLIC_IOS_STORE_URL` | The iOS store link. See [Store links](#store-links). Without it, the iPhone button shows "Coming soon". |
+| `NEXT_PUBLIC_APPLE_PROVIDER_TOKEN` | Our provider token (`pt`), a number from App Store Connect. An App Store link gets the App Store label only when it is set. A TestFlight link ignores it. |
 | `NEXT_PUBLIC_ANALYTICS_LOCAL` | `true` turns analytics on locally, for a test. Set it in `.env.local` only, never in Vercel. GA4 then runs in debug mode. |
 
 Analytics and indexing run on the production deployment only. The site reads `VERCEL_ENV` and `NEXT_PUBLIC_VERCEL_ENV` to know this. Keep "Automatically expose System Environment Variables" on in Vercel.
@@ -60,12 +62,27 @@ Analytics and indexing run on the production deployment only. The site reads `VE
 |---|---|---|
 | `[Amplitude] Page Viewed` | `page_view` | UTM parameters and referrer, captured automatically |
 | `Beta Button Clicked` | `beta_button_click` | `platform`, `location`, `available` |
+| `Store Clicked` | `store_click` | `platform`, `location`, `destination` |
+
+Every event also carries the first and latest touch, and `current_page`.
 
 A click on a "Coming soon" button sends `available: false`. That measures demand for each platform before the beta opens.
 
-## Add a beta link
+`destination` names the store that a click opens: `play_store`, `testflight` or `app_store`. GA4 shows an event parameter only after you register it as a custom dimension with Event scope.
 
-Paste the link into `BETA_LINKS` in `lib/site.ts`. The button then links to the store. An Android link also carries the visit's UTM parameters as the Play `referrer`.
+## Store links
+
+Set the link in Vercel, then redeploy. The button then links to the store.
+
+| | Link | What the link carries |
+|---|---|---|
+| Android | The Google Play store listing, `https://play.google.com/store/apps/details?id=com.blueplanit.tend` | The first and latest touch, as the install `referrer` |
+| iOS beta | The TestFlight public link, `https://testflight.apple.com/join/…` | Nothing. TestFlight takes no tags. |
+| iOS public | The App Store listing, `https://apps.apple.com/app/…/id…` | The App Store label of the latest touch, with `NEXT_PUBLIC_APPLE_PROVIDER_TOKEN` |
+
+- **Android:** use the store listing, not the open test join page. Only the store listing keeps the install referrer. A tester joins the open test once, then installs from the store listing.
+- **TestFlight:** the public link takes up to 10,000 external testers. It works only after Beta App Review.
+- **App Store:** [docs/app-store-reporting.md](docs/app-store-reporting.md) says how to read downloads by source. [docs/url-tags.md](docs/url-tags.md) states the label rules.
 
 ## Edit copy
 

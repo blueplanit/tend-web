@@ -4,12 +4,12 @@ How the engineering skills should consume this repo's domain documentation when 
 
 ## Before exploring, read these
 
-**This repo:** single-context. The Tend glossary lives in the tend-marketing repo, at `../tend-marketing/GLOSSARY.md`, not at this repo root. Read that file. Do not create a second `GLOSSARY.md` in tend-web: add new terms to the tend-marketing glossary. ADRs live in `docs/adr/` here.
+**This repo:** single-context. The glossary is `CONTEXT.md` at the repo root. Add new terms there. ADRs live in `docs/adr/`.
 
-- **`../tend-marketing/GLOSSARY.md`**: the Tend glossary.
+- **`CONTEXT.md`**: the Tend website glossary.
 - **`docs/adr/`**: read ADRs that touch the area you work in.
 
-If an ADR does not exist yet, proceed silently. The `/domain-modeling` skill creates ADRs here when a decision is resolved. It adds new terms to the tend-marketing glossary, not to a glossary in this repo.
+If an ADR does not exist yet, proceed silently. The `/domain-modeling` skill creates ADRs here when a decision is resolved. It adds new terms to `CONTEXT.md`.
 
 ## File structure
 
@@ -17,7 +17,7 @@ Single-context repo (most repos):
 
 ```
 /
-├── GLOSSARY.md
+├── CONTEXT.md
 ├── docs/adr/
 │   ├── 0001-event-sourced-orders.md
 │   └── 0002-postgres-for-write-model.md
@@ -41,7 +41,7 @@ Multi-context repo (presence of `GLOSSARY-MAP.md` at the root):
 
 ## Use the glossary's vocabulary
 
-When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `GLOSSARY.md`. Don't drift to synonyms the glossary explicitly avoids.
+When your output names a domain concept, use the term as defined in `CONTEXT.md`. Issue titles, refactor proposals, hypotheses and test names all count. Don't drift to synonyms the glossary explicitly avoids.
 
 If the concept you need isn't in the glossary yet, that's a signal: either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`).
 

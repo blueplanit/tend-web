@@ -9,16 +9,16 @@ export const FEEDBACK_EMAIL = "admin@blueplanit.co";
 
 export type BetaPlatform = "android" | "ios";
 
-// The beta install links. null shows "Coming soon". The links: tend-marketing/listings/README.md.
-// - Android: set NEXT_PUBLIC_ANDROID_STORE_URL in Vercel. Then redeploy.
-//   Use the store listing, https://play.google.com/store/apps/details?id=com.blueplanit.tend.
-//   A tester joins the open test once, then installs from the store listing.
-//   lib/analytics/store-attribution.ts says why.
-// - iOS: paste the TestFlight public link here when it exists.
+// The beta install links. null shows "Coming soon". Set each one in Vercel, then redeploy.
+// README.md, "Store links", says which link to use.
 export const BETA_LINKS: Record<BetaPlatform, string | null> = {
   android: process.env.NEXT_PUBLIC_ANDROID_STORE_URL || null,
-  ios: null,
+  ios: process.env.NEXT_PUBLIC_IOS_STORE_URL || null,
 };
+
+// Our provider token (pt) from App Store Connect. An App Store link gets the App Store
+// label only when it is set. docs/app-store-reporting.md says how Apple reports labels.
+export const APPLE_PROVIDER_TOKEN = process.env.NEXT_PUBLIC_APPLE_PROVIDER_TOKEN?.trim() || null;
 
 // Analytics and indexing run on the production deployment only.
 // Vercel sets VERCEL_ENV, and exposes it to the browser as NEXT_PUBLIC_VERCEL_ENV.

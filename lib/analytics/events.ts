@@ -11,7 +11,8 @@ export const EVENTS = {
     amplitude: "Beta Button Clicked",
     ga: "beta_button_click",
   },
-  // A click that leaves the site for Google Play or TestFlight.
+  // A click that leaves the site for Google Play, TestFlight or the App Store.
+  // destination names the store: play_store, testflight or app_store.
   storeClicked: {
     amplitude: "Store Clicked",
     ga: "store_click",
