@@ -332,6 +332,44 @@ describe("later page loads", () => {
     });
   });
 
+  it("count a tagged URL again when a fresh click brings it from another site", () => {
+    const tags = "?utm_source=reddit&utm_medium=social";
+    const { fields } = visits(
+      { path: "/" + tags, referrer: "https://www.reddit.com/" },
+      { path: "/", referrer: "https://www.google.com/" },
+      { path: "/blog/x" + tags, referrer: "https://www.reddit.com/" },
+    );
+    expect(fields).toMatchObject({
+      first_source: "reddit",
+      latest_source: "reddit",
+      latest_medium: "social",
+      latest_landing_page: "/blog/x",
+    });
+  });
+
+  it("move the latest landing page to a new ad click from the same source", () => {
+    const { fields } = visits({ path: "/a?gclid=AAA" }, { path: "/b?gclid=BBB" });
+    expect(fields).toMatchObject({
+      first_landing_page: "/a",
+      latest_source: "google",
+      latest_medium: "cpc",
+      latest_landing_page: "/b",
+    });
+  });
+
+  it("record the unpaid status when tags prove it on a later visit from the same source", () => {
+    const { fields } = visits(
+      { path: "/", referrer: "https://www.reddit.com/" },
+      { path: "/?utm_source=reddit&utm_medium=social", referrer: "https://www.reddit.com/" },
+    );
+    expect(fields).toMatchObject({
+      first_source: "reddit",
+      first_paid_status: "unknown",
+      latest_source: "reddit",
+      latest_paid_status: "unpaid",
+    });
+  });
+
   it("do not count a reopened ad URL again, because its click id is the same", () => {
     const fromAd = { path: "/?gclid=AAA&utm_campaign=pa002" };
     const { fields, changed } = visits(fromAd, { path: "/", referrer: "https://www.reddit.com/" }, fromAd);

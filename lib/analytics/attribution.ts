@@ -236,18 +236,10 @@ function sourceKey(signal: Signal) {
   return [signal.source, signal.medium, signal.campaign ?? "", signal.content ?? ""].join("|");
 }
 
-// The source of one page load. urlKey is set when the URL itself carries the source,
-// as tags or an ad click ID. A visitor can reopen such a URL later. A new click ID
-// gives a new urlKey, because it proves a new ad click.
-type PageSignal = { signal: Signal; urlKey?: string };
-
-// Reads the source of one full page load, or null when it carries none.
-function readSignal(page: PageLoad): PageSignal | null {
-  if (page.navigationType === "reload" || page.navigationType === "back_forward") return null;
-  const url = new URL(page.href);
-  if (sameSite(hostOf(page.referrer), url.hostname)) return null; // internal navigation
-
-  const params = url.searchParams;
+// The source that a URL itself carries, as an ad click ID or tags, with a key for it.
+// A visitor can reopen such a URL later. A new click ID gives a new key, because it
+// proves a new ad click.
+function readUrl(params: URLSearchParams): { signal: Signal; urlKey: string } | null {
   const tagged = readTags(params);
   // An ad click ID proves a paid ad, so it wins over the URL tags. The tags still
   // give the Campaign Code and the content id.
@@ -262,9 +254,31 @@ function readSignal(page: PageLoad): PageSignal | null {
     };
     return { signal, urlKey: `${sourceKey(signal)}|${shortHash(params.get(ad.key) ?? "")}` };
   }
-  if (tagged) return { signal: tagged, urlKey: sourceKey(tagged) };
+  return tagged && { signal: tagged, urlKey: sourceKey(tagged) };
+}
+
+// The source tags of a URL after the reviewed list applies, or null when it has none.
+// GA4 reads URL tags for its own reports, so it gets these values, not the raw ones.
+export function urlTags(href: string): Record<string, string> | null {
+  const fromUrl = readUrl(new URL(href).searchParams);
+  return fromUrl && touchTags(fromUrl.signal);
+}
+
+// The source of one page load. fromOtherSite is true when another site or app sent
+// the visitor, so a fresh click can count a URL that already counted.
+type PageSignal = { signal: Signal; urlKey?: string; fromOtherSite: boolean };
+
+// Reads the source of one full page load, or null when it carries none.
+function readSignal(page: PageLoad): PageSignal | null {
+  if (page.navigationType === "reload" || page.navigationType === "back_forward") return null;
+  const url = new URL(page.href);
+  if (sameSite(hostOf(page.referrer), url.hostname)) return null; // internal navigation
+
   const referred = readReferrer(page.referrer);
-  return referred && { signal: referred };
+  const fromOtherSite = referred !== null;
+  const fromUrl = readUrl(url.searchParams);
+  if (fromUrl) return { ...fromUrl, fromOtherSite };
+  return referred && { signal: referred, fromOtherSite };
 }
 
 // How much a touch tells us: 0 = unknown, 1 = an unlisted tag, 2 = a known source.
@@ -277,8 +291,9 @@ function certainty(touch: Signal) {
 // A touch never gives way to a less certain one. So an unknown visit or an unlisted
 // tag never replaces a known source, but an unlisted tag can fill an unknown touch.
 // The first touch changes only for a more certain touch.
-// The same source as the latest one counts once, so it keeps its first landing page.
-// A URL source that already counted never counts again. An untagged source can.
+// A URL source that already counted counts again only when another site sends it,
+// because a bookmark or the browser history sends no referrer. An untagged source
+// always counts again.
 function nextAttribution(
   previous: Attribution | null,
   pageSignal: PageSignal | null,
@@ -289,13 +304,14 @@ function nextAttribution(
     const unknown: Touch = { source: UNKNOWN, medium: UNKNOWN, paidStatus: UNKNOWN, landingPage };
     return { first: unknown, latest: unknown, seen: [] };
   }
-  const { signal, urlKey } = pageSignal;
+  const { signal, urlKey, fromOtherSite } = pageSignal;
   const touch: Touch = { ...signal, landingPage };
   if (!previous) return { first: touch, latest: touch, seen: urlKey ? [urlKey] : [] };
-  if (urlKey && previous.seen.includes(urlKey)) return previous;
+  if (urlKey && previous.seen.includes(urlKey) && !fromOtherSite) return previous;
 
-  const seen = urlKey ? [...previous.seen, urlKey].slice(-SEEN_LIMIT) : previous.seen;
-  if (sourceKey(signal) === sourceKey(previous.latest)) return { ...previous, seen };
+  const seen = urlKey
+    ? [...previous.seen.filter((key) => key !== urlKey), urlKey].slice(-SEEN_LIMIT)
+    : previous.seen;
   if (certainty(touch) < certainty(previous.latest)) return previous;
   return {
     first: certainty(touch) > certainty(previous.first) ? touch : previous.first,
